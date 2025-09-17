@@ -1,0 +1,72 @@
+{
+  "form": [
+    {
+      "formName": "Example Form 1",
+      "formId": "formId1",
+      "views": [
+        {
+          "viewName": "Example View 1",
+          "viewId": "viewId1",
+          "viewType": "Gallery"
+        },
+        {
+          "viewName": "Example View 2",
+          "viewId": "viewId2",
+          "viewType": "Table"
+        }
+      ],
+      "reports": [
+        {
+          "reportName": "Example Report 1",
+          "reportId": "reportId1",
+          "reportType": "Chart"
+        },
+        {
+          "reportName": "Example Report 2",
+          "reportId": "reportId2",
+          "reportType": "Tabular"
+        }
+      ]
+    },
+    {
+      "formName": "Example Form 2",
+      "formId": "formId2",
+      "views": [],
+      "reports": []
+    },
+      {
+      "formName": "Example Form 3",
+      "formId": "formId3",
+      "views": [{
+          "viewName": "Example View of form 3",
+          "viewId": "viewId33",
+          "viewType": "Table"
+        }],
+      "reports": []
+    }
+  ],
+  "variables": [
+    {
+      "variableName": "App Variable - Example 1",
+      "variableId": "variableId1"
+    },
+    {
+      "variableName": "App Variable - Example 2",
+      "variableId": "hello"
+    },
+     {
+      "variableName": "App Variable - Example 3",
+      "variableId": "testNumber"
+    }
+  ],
+  "page": [
+    {
+      "pageName": "Dashboard Page",
+      "pageId": "pageId1"
+    },
+    {
+      "pageName": "Settings Page",
+      "pageId": "pageId2"
+    }
+  ]
+}

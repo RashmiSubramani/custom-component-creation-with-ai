@@ -1,0 +1,14 @@
+/* Component Forge specific styles */
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Sandpack customizations */
+.sp-wrapper {
+  --sp-colors-bg-default: hsl(var(--background));
+  --sp-colors-fg-default: hsl(var(--foreground));
+  --sp-colors-bg-active: hsl(var(--accent));
+}
