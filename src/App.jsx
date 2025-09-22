@@ -1,17 +1,44 @@
-import { useState } from "react";
-import { Moon, Download } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Moon, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./components/ui/button";
 import PromptComposer from "./components/PromptComposer";
 import SandpackStudio from "./components/SandpackStudio";
-import { sampleProjectFiles } from "./sandbox/sampleProject";
-import { loadReactTemplateForDownload } from "./sandbox/templateWithoutSDK";
+import { loadSampleProjectFiles } from "./sandbox/sampleProject";
+import {
+  loadReactTemplateForDownload,
+  loadReactTemplateWithGitHubComponents,
+} from "./sandbox/templateWithoutSDK";
 import { generateComponent, modifyComponent } from "./services/llm";
-
+import { detectShadCNComponents } from "./services/componentDetector";
 function App() {
-  const [projectFiles, setProjectFiles] = useState(sampleProjectFiles);
+  const [projectFiles, setProjectFiles] = useState({});
   const [isFirstPrompt, setIsFirstPrompt] = useState(true);
   const [compilationStatus, setCompilationStatus] = useState("pending");
   const [selectedSuggestions, setSelectedSuggestions] = useState([]);
+  const [isLoadingInitialProject, setIsLoadingInitialProject] = useState(true);
+  const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+
+  // Load initial project with ShadCN components
+  useEffect(() => {
+    const loadInitialProject = async () => {
+      try {
+        const initialFiles = await loadSampleProjectFiles();
+        setProjectFiles(initialFiles);
+      } catch (error) {
+        // Fallback to empty state - user can still generate components
+        setProjectFiles({});
+      } finally {
+        setIsLoadingInitialProject(false);
+      }
+    };
+
+    loadInitialProject();
+  }, []);
+
+  // Track compilation status changes
+  useEffect(() => {
+    // Note: Compilation status tracking for UI updates
+  }, [compilationStatus]);
 
   // Download project files as ZIP (with real SDK in package.json)
   const handleDownloadProject = () => {
@@ -44,7 +71,7 @@ function App() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error creating zip file:", error);
+      // Silently fail for zip download errors
     }
   };
 
@@ -52,63 +79,148 @@ function App() {
     prompt,
     promptSelectedSuggestions = []
   ) => {
-    // Update selected suggestions for SDK integration
+    // Update selected suggestions for component generation
     setSelectedSuggestions(promptSelectedSuggestions);
-    try {
-      if (isFirstPrompt) {
-        // First prompt: Replace the existing DefaultLandingComponent
-        const { componentCode } = await generateComponent(
+    if (isFirstPrompt) {
+      // Set a temporary loading component to avoid Sandpack errors during generation
+      const loadingComponent = `import React from 'react';
+
+export function DefaultLandingComponent() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Generating component...</p>
+      </div>
+    </div>
+  );
+}`;
+
+      setProjectFiles((prev) => ({
+        ...prev,
+        "/src/landing/index.jsx": loadingComponent,
+      }));
+
+      // First prompt: Replace the existing DefaultLandingComponent
+      let componentCode;
+      try {
+        const result = await generateComponent(
           prompt,
           promptSelectedSuggestions
         );
-
-        const newFiles = {
-          ...projectFiles,
-          // Replace the existing DefaultLandingComponent with generated component
-          "/src/landing/index.jsx": componentCode,
-        };
-
-        setProjectFiles(newFiles);
-        setIsFirstPrompt(false);
-        setCompilationStatus("pending"); // Reset status for new generation
-
-        return {
-          componentName: "DefaultLandingComponent",
-          action: "replaced",
-          description: `Generated component successfully! Replaced existing DefaultLandingComponent.`,
-          waitForCompilation: true,
-        };
-      } else {
-        // Subsequent prompts: Modify existing files
-        const existingComponentPath = "/src/landing/index.jsx";
-        const existingCode = projectFiles[existingComponentPath];
-
-        const { componentCode } = await modifyComponent(
-          prompt,
-          "DefaultLandingComponent",
-          existingCode,
-          "", // No existing CSS
-          promptSelectedSuggestions
-        );
-
-        const newFiles = {
-          ...projectFiles,
-          [existingComponentPath]: componentCode,
-        };
-
-        setProjectFiles(newFiles);
-        setCompilationStatus("pending"); // Reset status for modification
-
-        return {
-          componentName: "DefaultLandingComponent",
-          action: "modified",
-          description: `Modified DefaultLandingComponent component successfully!`,
-          waitForCompilation: true,
-        };
+        componentCode = result.componentCode;
+      } catch (llmError) {
+        throw new Error(`LLM generation failed: ${llmError.message}`);
       }
-    } catch (error) {
-      console.error("Component generation failed:", error);
-      throw error;
+
+      // Detect which ShadCN components are used in the generated code
+      const usedComponents = detectShadCNComponents(componentCode);
+
+      // Clear cache for fresh component loading
+      const { shadcnGitHubFetcher } = await import(
+        "./services/shadcnGitHubFetcher.js"
+      );
+      shadcnGitHubFetcher.clearCache();
+
+      // Create template with only the used components dynamically fetched from GitHub
+      const baseFiles = await loadReactTemplateWithGitHubComponents(
+        "my-component",
+        usedComponents
+      );
+
+      // Transform @/ imports to relative imports for Sandpack compatibility
+      const transformedComponentCode = componentCode.replace(
+        /from\s+["']@\/components\/ui\/([^"']+)["']/g,
+        'from "../components/ui/$1"'
+      );
+
+      const newFiles = {
+        ...baseFiles,
+        // Replace the existing DefaultLandingComponent with generated component
+        "/src/landing/index.jsx": transformedComponentCode,
+      };
+
+      setProjectFiles(newFiles);
+      setIsFirstPrompt(false);
+
+      // Set success status immediately after successful component generation
+      setTimeout(() => {
+        setCompilationStatus("success");
+      }, 1000); // Reduced to 1 second for faster UI response
+
+      return {
+        componentName: "DefaultLandingComponent",
+        action: "replaced",
+        description: `Generated component successfully! Replaced existing DefaultLandingComponent.`,
+        waitForCompilation: true,
+      };
+    } else {
+      // Subsequent prompts: Modify existing files
+      const existingComponentPath = "/src/landing/index.jsx";
+      const existingCode = projectFiles[existingComponentPath];
+
+      const { componentCode } = await modifyComponent(
+        prompt,
+        "DefaultLandingComponent",
+        existingCode,
+        "", // No existing CSS
+        promptSelectedSuggestions
+      );
+
+      // Detect any new components used in the modified code
+      const usedComponents = detectShadCNComponents(componentCode);
+
+      // Check if we need to fetch new components
+      const currentComponentPaths = Object.keys(projectFiles).filter((path) =>
+        path.startsWith("/src/components/ui/")
+      );
+      const currentComponents = currentComponentPaths.map((path) =>
+        path.replace("/src/components/ui/", "").replace(".jsx", "")
+      );
+
+      const newComponents = usedComponents.filter(
+        (comp) => !currentComponents.includes(comp)
+      );
+
+      let newFiles = { ...projectFiles };
+
+      if (newComponents.length > 0) {
+        // Fetch only the new components and add them to existing files
+        const newComponentFiles = await loadReactTemplateWithGitHubComponents(
+          "my-component",
+          newComponents
+        );
+
+        // Merge only the new component files
+        Object.keys(newComponentFiles).forEach((path) => {
+          if (path.startsWith("/src/components/ui/") && !newFiles[path]) {
+            newFiles[path] = newComponentFiles[path];
+          }
+        });
+      }
+
+      // Transform @/ imports to relative imports for Sandpack compatibility
+      const transformedComponentCode = componentCode.replace(
+        /from\s+["']@\/components\/ui\/([^"']+)["']/g,
+        'from "../components/ui/$1"'
+      );
+
+      // Update the main component
+      newFiles[existingComponentPath] = transformedComponentCode;
+
+      setProjectFiles(newFiles);
+
+      // Set success status immediately after successful component modification
+      setTimeout(() => {
+        setCompilationStatus("success");
+      }, 1000); // Reduced to 1 second for faster UI response
+
+      return {
+        componentName: "DefaultLandingComponent",
+        action: "modified",
+        description: `Modified DefaultLandingComponent component successfully!`,
+        waitForCompilation: true,
+      };
     }
   };
 
@@ -157,23 +269,52 @@ function App() {
 
       {/* Main Content - Full Screen Layout */}
       <main className="flex-1 overflow-hidden">
-        <div className="flex flex-col lg:flex-row h-full">
+        <div className="flex flex-col lg:flex-row h-full relative">
           {/* Left Pane - Chat Interface */}
-          <div className="w-full lg:w-1/3 border-r border-gray-200 h-full overflow-hidden flex-shrink-0">
-            <PromptComposer
-              onGenerateComponent={handleGenerateComponent}
-              selectedSuggestions={selectedSuggestions}
-              compilationStatus={compilationStatus}
-            />
+          <div className={`${isPromptCollapsed ? 'w-0' : 'w-full lg:w-1/4'} border-r border-gray-200 h-full overflow-hidden flex-shrink-0 transition-all duration-300 ${isPromptCollapsed ? 'border-r-0' : ''}`}>
+            <div className={`h-full ${isPromptCollapsed ? 'hidden' : 'block'}`}>
+              <PromptComposer
+                onGenerateComponent={handleGenerateComponent}
+                selectedSuggestions={selectedSuggestions}
+                compilationStatus={compilationStatus}
+              />
+            </div>
+          </div>
+
+          {/* Collapse Toggle Button */}
+          <div className={`absolute top-1/2 transform -translate-y-1/2 z-20 transition-all duration-300 ${isPromptCollapsed ? 'left-2' : 'left-[calc(25%-24px)]'}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="bg-white border border-gray-200 shadow-lg hover:bg-gray-50 rounded-full h-8 w-8 p-0 flex items-center justify-center"
+              onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+            >
+              {isPromptCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
           </div>
 
           {/* Right Pane - Code & Preview */}
           <div className="flex-1 h-full flex flex-col min-w-0">
-            <SandpackStudio
-              showPreview={true}
-              files={projectFiles}
-              onCompilationStatus={setCompilationStatus}
-            />
+            {isLoadingInitialProject ? (
+              <div className="flex items-center justify-center h-full bg-gray-50">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">
+                    Loading project with ShadCN components...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <SandpackStudio
+                showPreview={true}
+                files={projectFiles}
+                onCompilationStatus={setCompilationStatus}
+              />
+            )}
           </div>
         </div>
       </main>

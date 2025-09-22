@@ -27,7 +27,10 @@ const templateFiles = {
     "react-dom": "^18.2.0",
     "tailwindcss": "^3.4.0",
     "postcss": "^8.4.31",
-    "autoprefixer": "^10.4.16"
+    "autoprefixer": "^10.4.16",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
@@ -81,43 +84,69 @@ export default App;`,
 @tailwind components;
 @tailwind utilities;`,
 
-  landingIndex: `export function DefaultLandingComponent() {
+  landingIndex: `import { Button } from "../components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+
+export function DefaultLandingComponent() {
   function handleClick() {
-    alert("Button clicked!");
+    alert("ShadCN Button clicked!");
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-400 to-green-500 p-6">
-      <div className="bg-white rounded-xl p-10 shadow-xl text-center max-w-lg w-full">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-green-600 bg-clip-text text-transparent mb-4">
-          Welcome to React + Tailwind
-        </h1>
+      <Card className="max-w-lg w-full">
+        <CardHeader>
+          <CardTitle className="text-center text-3xl bg-gradient-to-r from-blue-500 to-green-600 bg-clip-text text-transparent">
+            Welcome to ShadCN + Tailwind
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-gray-600">
+            This component now uses ShadCN UI components!
+            <br />
+            <Badge variant="secondary" className="mt-2">All 51 components available</Badge>
+          </p>
 
-        <p className="text-gray-600 mb-6">
-          This is a sample custom component with TailwindCSS.
-          <br />
-          Edit <code className="bg-gray-200 px-2 py-0.5 rounded">App.jsx</code> to make changes.
-        </p>
-
-        <button
-          onClick={handleClick}
-          className="bg-gradient-to-r from-blue-500 to-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:scale-105 transform transition"
-        >
-          Click me
-        </button>
-      </div>
+          <Button onClick={handleClick} className="w-full">
+            Test ShadCN Button
+          </Button>
+          
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" size="sm">Outline</Button>
+            <Button variant="destructive" size="sm">Destructive</Button>
+            <Button variant="ghost" size="sm">Ghost</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }`,
+
+
+  // utils file for cn function
+  utilsFile: `import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}`,
 };
 
-export function loadReactTemplate(projectName = "custom-component") {
+// Import ShadCN GitHub fetcher service
+import { shadcnGitHubFetcher } from "../services/shadcnGitHubFetcher.js";
+
+// Removed complex loadReactTemplate function - using simpler loadReactTemplateWithAllComponents approach
+
+// New function: Load template with dynamic GitHub component fetching
+export async function loadReactTemplateWithGitHubComponents(projectName = "custom-component", componentNames = []) {
   const packageJson = templateFiles.packageJsonTemplate.replace(
     /<%= projectName %>/g,
     projectName
   );
 
-  const projectFiles = {
+  // Base template files
+  const baseFiles = {
     "/index.html": templateFiles.indexHtml,
     "/package.json": packageJson,
     "/src/main.jsx": templateFiles.mainJsx,
@@ -126,9 +155,67 @@ export function loadReactTemplate(projectName = "custom-component") {
     "/tailwind.config.js": templateFiles.tailwindConfig,
     "/postcss.config.js": templateFiles.postcssConfig,
     "/src/landing/index.jsx": templateFiles.landingIndex,
+    "/src/lib/utils.js": templateFiles.utilsFile,
   };
 
-  return projectFiles;
+  // If no specific components requested, return base template
+  if (componentNames.length === 0) {
+    return baseFiles;
+  }
+
+  try {
+    
+    // Fetch components from GitHub
+    const { files: componentFiles, dependencies } = await shadcnGitHubFetcher.fetchMultipleComponents(componentNames);
+    
+    // Update package.json with dependencies
+    const updatedPackageJson = JSON.parse(packageJson);
+    const commonDeps = shadcnGitHubFetcher.getCommonDependencies();
+    
+    // Add common ShadCN dependencies
+    updatedPackageJson.dependencies = {
+      ...updatedPackageJson.dependencies,
+      ...commonDeps
+    };
+    
+    // Add specific component dependencies
+    dependencies.forEach(dep => {
+      if (!updatedPackageJson.dependencies[dep]) {
+        updatedPackageJson.dependencies[dep] = "latest";
+      }
+    });
+
+
+    return {
+      ...baseFiles,
+      "/package.json": JSON.stringify(updatedPackageJson, null, 2),
+      ...componentFiles
+    };
+
+  } catch (error) {
+    // Fallback to base template
+    return baseFiles;
+  }
+}
+
+// Backward compatibility - now returns minimal template, components loaded on demand
+export function loadReactTemplateWithAllComponents(projectName = "custom-component") {
+  const packageJson = templateFiles.packageJsonTemplate.replace(
+    /<%= projectName %>/g,
+    projectName
+  );
+
+  return {
+    "/index.html": templateFiles.indexHtml,
+    "/package.json": packageJson,
+    "/src/main.jsx": templateFiles.mainJsx,
+    "/src/App.jsx": templateFiles.appJsx,
+    "/src/index.css": templateFiles.indexCss,
+    "/tailwind.config.js": templateFiles.tailwindConfig,
+    "/postcss.config.js": templateFiles.postcssConfig,
+    "/src/landing/index.jsx": templateFiles.landingIndex,
+    "/src/lib/utils.js": templateFiles.utilsFile,
+  };
 }
 
 export function loadReactTemplateForDownload(projectName = "custom-component") {
@@ -148,14 +235,3 @@ export function loadReactTemplateForDownload(projectName = "custom-component") {
   };
 }
 
-export function getAvailableTemplates() {
-  return [
-    {
-      id: "react",
-      name: "React + Tailwind",
-      description: "React project Tailwind integration",
-      loader: loadReactTemplate,
-      downloadLoader: loadReactTemplateForDownload,
-    },
-  ];
-}

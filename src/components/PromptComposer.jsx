@@ -8,8 +8,6 @@ import {
   replaceTriggerWithSelection,
 } from "../utils/autoSuggestUtils";
 
-// console.log("AutoSuggest",AutoSuggest)
-
 const WELCOME_MESSAGE = {
   id: 1,
   type: "assistant",
@@ -22,6 +20,10 @@ export default function PromptComposer({
   onGenerateComponent,
   compilationStatus,
 }) {
+  // Debug compilation status changes and update ref
+  useEffect(() => {
+    compilationStatusRef.current = compilationStatus;
+  }, [compilationStatus]);
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem("cf.chatMessages");
     return saved ? JSON.parse(saved) : [WELCOME_MESSAGE];
@@ -34,6 +36,7 @@ export default function PromptComposer({
   const [selectedSuggestionIds, setSelectedSuggestionIds] = useState([]);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const compilationStatusRef = useRef(compilationStatus);
 
   // Persist messages to localStorage
   useEffect(() => {
@@ -88,12 +91,12 @@ export default function PromptComposer({
           await new Promise((resolve) => setTimeout(resolve, 1000));
           attempts++;
 
-          if (compilationStatus === "success") {
+          if (compilationStatusRef.current === "success") {
             compilationSuccess = true;
             break;
           }
 
-          if (compilationStatus === "error") {
+          if (compilationStatusRef.current === "error") {
             compilationSuccess = false;
             break;
           }
@@ -130,8 +133,6 @@ export default function PromptComposer({
 
       setIsGenerating(false);
     } catch (error) {
-      console.error("LLM API error:", error);
-
       const errorMessage = {
         id: Date.now() + 1,
         type: "assistant",

@@ -1,7 +1,8 @@
 // LLM service for making API calls through backend proxy
 // This avoids CORS issues by routing requests through your server
 
-import { generateSDKEnhancedPrompt } from "../utils/sdkCommandMatcher";
+import { enhancePromptForShadCN } from "./componentDetector";
+// Removed unused imports - using simple approach now
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3001";
 
@@ -130,24 +131,13 @@ export async function modifyComponent(
   existingCss,
   selectedSuggestions = []
 ) {
-  // Only enhance with SDK commands if user has selected suggestions or prompt contains SDK patterns
-  const hasSelectedSuggestions = selectedSuggestions && selectedSuggestions.length > 0;
-  const sdkEnhancement = generateSDKEnhancedPrompt(prompt, selectedSuggestions);
-  
-  // More strict check: only use SDK if user explicitly selected suggestions
-  // OR if prompt contains specific entity references (not just generic words like "table")
-  const hasEntityContext = hasSelectedSuggestions || 
-    (sdkEnhancement.hasSDKCommands && Object.keys(sdkEnhancement.entityIds).length > 0);
-  
-  const shouldUseSDK = hasEntityContext;
-  
-  const enhancedPrompt = shouldUseSDK && sdkEnhancement.hasSDKCommands
-    ? sdkEnhancement.enhancedPrompt
-    : prompt;
+  // Add ShadCN import instructions to the prompt
+  const finalEnhancedPrompt = enhancePromptForShadCN(prompt);
 
-  const modifyPrompt = `Modify the existing React component based on the user's request.
+  const modifyPrompt = `Modify the existing React component based on the user's request using ShadCN UI components.
 
-User request: "${enhancedPrompt}"
+
+User request: "${finalEnhancedPrompt}"
 Component name: ${componentName}
 
 Current component code:
@@ -162,27 +152,22 @@ IMPORTANT: Respond ONLY with valid JSON:
   "cssCode": "modified CSS code here"
 }
 
-Requirements:
+🎯 MODIFICATION REQUIREMENTS:
 - Keep the same component name: ${componentName}
+- **MANDATORY**: Use ShadCN UI components instead of basic HTML elements when making changes  
+- **CRITICAL**: ONLY use @/components/ui/[component-name] import format - DO NOT use relative paths like ../components/ui/
+- Example: import { Button } from "@/components/ui/button" (CORRECT)
+- DO NOT use: import { Button } from "../components/ui/button" (WRONG)
+- **CRITICAL**: DO NOT import external libraries (react-hook-form, zod, etc.) - use built-in React features only
+- Use useState and native form handling for forms
 - Preserve existing functionality unless specifically asked to change it
 - Only modify what the user requested
 - Maintain code quality and structure
-- Include proper imports and exports
-${
-  shouldUseSDK && sdkEnhancement.hasSDKCommands
-    ? `
-- IMPORTANT: Integrate ONLY the provided Kissflow SDK commands
-- Initialize SDK if not already present: const kf = await KFSDK.initialize();
-- Use exact entity IDs: ${JSON.stringify(sdkEnhancement.entityIds)}
-- Add proper error handling for SDK operations
-- DO NOT add extra functionality not requested by the user
-- Focus only on the specific modification requested in the prompt`
-    : `
+- Include proper imports and exports for any new ShadCN components used
 - Keep modifications focused on UI/UX improvements
 - Avoid adding unnecessary API calls or external dependencies
 - Use mock data if needed for demonstration purposes
-- Maintain clean, self-contained component design`
-}`;
+- Maintain clean, self-contained component design`;
 
   try {
     const response = await callLLM(modifyPrompt, "openai");
@@ -199,8 +184,18 @@ ${
     }
 
     const parsed = JSON.parse(cleanResponse);
+    
+    // Post-process component code to fix any relative imports
+    let componentCode = parsed.componentCode || existingCode;
+    
+    // Convert any relative imports to @/ format
+    componentCode = componentCode.replace(
+      /from\s+["']\.\.?\/components\/ui\/([^"']+)["']/g,
+      'from "@/components/ui/$1"'
+    );
+    
     return {
-      componentCode: parsed.componentCode || existingCode,
+      componentCode,
       cssCode: parsed.cssCode || existingCss,
     };
   } catch (error) {
@@ -209,6 +204,8 @@ ${
   }
 }
 
+// Removed generateComponentWithOptimization - using simple approach with all components loaded
+
 /**
  * Generates React component code based on user prompt
  * @param {string} prompt - The user's component description
@@ -216,63 +213,41 @@ ${
  * @returns {Promise<{componentCode: string, componentName: string, cssCode: string}>} - Generated code
  */
 export async function generateComponent(prompt, selectedSuggestions = []) {
-  // Only enhance with SDK commands if user has selected suggestions or prompt contains SDK patterns
-  const hasSelectedSuggestions = selectedSuggestions && selectedSuggestions.length > 0;
-  const sdkEnhancement = generateSDKEnhancedPrompt(prompt, selectedSuggestions);
-  
-  // More strict check: only use SDK if user explicitly selected suggestions
-  // OR if prompt contains specific entity references (not just generic words like "table")
-  const hasEntityContext = hasSelectedSuggestions || 
-    (sdkEnhancement.hasSDKCommands && Object.keys(sdkEnhancement.entityIds).length > 0);
-  
-  const shouldUseSDK = hasEntityContext;
-  
-  const enhancedPrompt = shouldUseSDK && sdkEnhancement.hasSDKCommands
-    ? sdkEnhancement.enhancedPrompt
-    : prompt;
+  // Add ShadCN import instructions to the prompt
+  const finalEnhancedPrompt = enhancePromptForShadCN(prompt);
 
-  const codePrompt = `You are a React component generator. Generate a React component based on this description: "${enhancedPrompt}"
+  const codePrompt = `You are a React component generator specialized in ShadCN UI components. Generate a React component based on this description: "${finalEnhancedPrompt}"
+
 
 IMPORTANT: Respond ONLY with valid JSON in this exact format:
 
 {
   "componentName": "DefaultLandingComponent",
-  "componentCode": "import React from 'react';\n\nexport function DefaultLandingComponent() {\n  function handleClick(){}\n  return (\n    <div>\n      {/* component JSX */}\n    </div>\n  );\n}",
+  "componentCode": "import React from 'react';\nimport { Button } from \"@/components/ui/button\";\nimport { Card } from \"@/components/ui/card\";\n\nexport function DefaultLandingComponent() {\n  function handleClick(){}\n  return (\n    <div>\n      <Button>Click me</Button>\n      {/* more component JSX using ShadCN components */}\n    </div>\n  );\n}",
   "cssCode": "/* CSS styles for the component */"
 }
 
-Requirements:
+🎯 CRITICAL REQUIREMENTS:
 
 - Component name must ALWAYS be "DefaultLandingComponent"
 - Use modern functional component syntax with export function
-- Include complete JSX return statement
-- Make it visually appealing with good styling
-- Use Tailwind CSS classes that work well
+- **MANDATORY**: Use ShadCN UI components instead of basic HTML elements
+- **CRITICAL**: ONLY use @/components/ui/[component-name] import format - DO NOT use relative paths like ../components/ui/
+- Example: import { Button } from "@/components/ui/button" (CORRECT)
+- DO NOT use: import { Button } from "../components/ui/button" (WRONG)
+- **CRITICAL**: DO NOT import external libraries (react-hook-form, zod, etc.) - use built-in React features only
+- Use useState and native form handling for forms
+- Include complete JSX return statement with ShadCN components
+- Make it visually appealing using ShadCN component patterns
+- Use Tailwind CSS classes for additional styling and layout
 - Keep code clean and well-structured
 - Use export function (not default export)
 - Make the component match EXACTLY the user's description
 - DO NOT add any functionality not explicitly requested by the user
-${
-  shouldUseSDK && sdkEnhancement.hasSDKCommands
-    ? `
-- IMPORTANT: Use ONLY the provided Kissflow SDK commands exactly as specified
-- Initialize SDK with: const kf = await KFSDK.initialize();
-- Include proper async/await patterns for SDK calls
-- Add error handling for API calls
-- Use the exact entity IDs provided: ${JSON.stringify(
-        sdkEnhancement.entityIds
-      )}
-- DO NOT add extra functionality not requested by the user
-- Focus only on the specific operation requested in the prompt
-- If user asks for "list data", do NOT add create/update/delete functions
-- If user asks for "create form", do NOT add list/display functions
-- Implement ONLY what was explicitly requested`
-    : `
 - Create a general-purpose UI component without API calls
 - Focus on clean, reusable component design
 - Use mock data if needed for demonstration
-- Make it functional and interactive but self-contained`
-}
+- Make it functional and interactive but self-contained
 
 Do not include any explanatory text, only the JSON response.
 `;
@@ -296,11 +271,20 @@ Do not include any explanatory text, only the JSON response.
 
     try {
       const parsed = JSON.parse(cleanResponse);
+      
+      // Post-process component code to fix any relative imports
+      let componentCode = parsed.componentCode || 
+        `import React from 'react';\n\nexport function DefaultLandingComponent() {\n  function handleClick(){}\n  return <div>Component generated from: ${prompt}</div>;\n}`;
+      
+      // Convert any relative imports to @/ format
+      componentCode = componentCode.replace(
+        /from\s+["']\.\.?\/components\/ui\/([^"']+)["']/g,
+        'from "@/components/ui/$1"'
+      );
+      
       return {
         componentName: parsed.componentName || "DefaultLandingComponent",
-        componentCode:
-          parsed.componentCode ||
-          `import React from 'react';\n\nexport function DefaultLandingComponent() {\n  function handleClick(){}\n  return <div>Component generated from: ${prompt}</div>;\n}`,
+        componentCode,
         cssCode: parsed.cssCode || "/* Generated styles */",
       };
     } catch (err) {

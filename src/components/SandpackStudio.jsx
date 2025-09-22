@@ -6,13 +6,10 @@ import {
   SandpackConsole,
   useSandpack,
   Sandpack,
+  SandpackLayout,
 } from "@codesandbox/sandpack-react";
-import { FileText } from "lucide-react";
+import { FileText, Terminal, ChevronUp, ChevronDown } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-
-// import KFSDK from "@kissflow/lowcode-client-sdk?raw";
-
-// console.log("KFSDK", KFSDK);
 
 // Component to monitor Sandpack compilation status
 function CompilationMonitor({ onStatusChange }) {
@@ -72,6 +69,9 @@ export default function SandpackStudio({
 }) {
   const [extraDependencies, setExtraDependencies] = useState({});
   const [isUpdatingDeps, setIsUpdatingDeps] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState("preview"); // "code" or "preview"
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
 
   const projectFiles = files;
 
@@ -118,13 +118,17 @@ export default function SandpackStudio({
   // Create a key based on the files content and extra dependencies to force re-render
   const filesKey =
     JSON.stringify(Object.keys(files).sort()) +
-    JSON.stringify(
-      files["/src/components/GeneratedComponent.jsx"]?.slice(0, 100)
-    ) +
-    JSON.stringify(extraDependencies);
+    JSON.stringify(files["/src/landing/index.jsx"]?.slice(0, 100)) +
+    JSON.stringify(extraDependencies) +
+    refreshKey;
+
+  // Force Sandpack refresh when files change
+  useEffect(() => {
+    setRefreshKey((prev) => prev + 1);
+  }, [files]);
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 flex flex-col">
       {isUpdatingDeps && (
         <div className="absolute top-0 left-0 right-0 z-10 bg-blue-50 border-b border-blue-200 px-4 py-2">
           <div className="text-sm text-blue-700 flex items-center gap-2">
@@ -133,133 +137,169 @@ export default function SandpackStudio({
           </div>
         </div>
       )}
-      <Sandpack
-        key={filesKey}
-        theme="light"
-        // options={{
-        //   activeFile: "/src/App.jsx",
-        //   showConsole: true,
-        //   showConsoleButton: true,
-        //   logLevel: "verbose",
-        // }}
-
-        customSetup={{
-          // dependencies: {
-          //   // "@codesandbox/sandpack-react": "latest",
-          //   "@kissflow/lowcode-client-sdk": "1.0.39",
-          //   // react: "18.2.0",
-          //   // "react-dom": "18.2.0",
-          // },
-          entry: "/src/main.jsx",
-        }}
-        template="react"
-        files={projectFiles}
-        options={{
-          externalResources: [
-            "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-          ],
-        }}
-        // options={{ bundlerURL: "https://sandpack-bundler.codesandbox.io" }}
-      >
-        <CompilationMonitor onStatusChange={onCompilationStatus} />
-        <div className="flex flex-col lg:flex-row h-full">
-          {/* File Explorer - Sidebar */}
-          <div className="w-full lg:w-64 border-r border-gray-200 bg-white flex flex-col h-full">
-            <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Files
-              </h3>
-            </div>
-            <div className="flex-1 overflow-auto min-h-0">
-              <SandpackFileExplorer
-                autoHiddenFiles={true}
-                style={{
-                  height: "100%",
-                  minHeight: "300px",
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Code Editor and Preview Area */}
-          <div className="flex-1 flex flex-col lg:flex-row h-full">
-            {/* Code Editor */}
-            <div
-              className={`${
-                showPreview ? "w-full lg:w-1/2" : "w-full"
-              } border-r border-gray-200 h-full flex flex-col`}
-            >
-              <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-                <h3 className="text-sm font-semibold text-gray-700">
-                  Code Editor
-                </h3>
+      {/* 
+        Height fix: flex-1 min-h-0 ensures the Sandpack component takes full available height
+        This layout is compatible with both Sandpack and SandpackProvider wrapper patterns
+        CSS rules in index.css (.sp-wrapper, .sp-layout, etc.) provide additional height enforcement
+      */}
+      <div className="flex-1 min-h-0">
+        <SandpackProvider
+          key={filesKey}
+          theme="light"
+          customSetup={{
+            entry: "/src/main.jsx",
+          }}
+          files={projectFiles}
+          options={{
+            externalResources: [
+              "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+            ],
+            activeFile: "/src/landing/index.jsx",
+            resizablePanels: true,
+          }}
+          template="react"
+          style={{
+            height: "100%",
+          }}
+        >
+          <SandpackLayout>
+            <CompilationMonitor onStatusChange={onCompilationStatus} />
+            <div className="flex flex-col h-full w-full">
+              {/* Tab Navigation */}
+              <div className="flex border-b border-gray-200 bg-gray-50 flex-shrink-0">
+                {showPreview && (
+                  <button
+                    onClick={() => setActiveTab("preview")}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === "preview"
+                        ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    Preview
+                  </button>
+                )}
+                <button
+                  onClick={() => setActiveTab("code")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === "code"
+                      ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  Code
+                </button>
               </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <SandpackCodeEditor
-                  showTabs={false}
-                  showLineNumbers={true}
-                  showInlineErrors={true}
-                  wrapContent={true}
-                  readOnly={false}
-                  style={{
-                    height: "100%",
-                    fontSize: "14px",
-                    overflow: "auto",
-                  }}
-                />
-              </div>
-            </div>
 
-            {/* Preview and Console */}
-            {showPreview && (
-              <div className="w-full lg:w-1/2 bg-white h-full flex flex-col">
-                {/* Preview Section */}
-                <div className="flex-1 flex flex-col">
-                  <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-                    <h3 className="text-sm font-semibold text-gray-700">
-                      Live Preview
-                    </h3>
+              {/* Tab Content */}
+              <div className="flex-1 min-h-0">
+                {/* Code Tab - File Explorer + Code Editor */}
+                <div
+                  className={`flex flex-col lg:flex-row h-full ${
+                    activeTab === "code" ? "block" : "hidden"
+                  }`}
+                >
+                  {/* File Explorer */}
+                  <div className="w-full lg:w-64 border-r border-gray-200 bg-white flex flex-col h-full">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+                      <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Files
+                      </h3>
+                    </div>
+                    <div className="flex-1 overflow-auto min-h-0">
+                      <SandpackFileExplorer
+                        autoHiddenFiles={true}
+                        style={{
+                          height: "100%",
+                          minHeight: "300px",
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="flex-1 min-h-0">
-                    <SandpackPreview
-                      key={filesKey}
-                      style={{
-                        height: "100%",
-                        width: "100%",
-                      }}
-                      showOpenInCodeSandbox={true}
-                      showRefreshButton={true}
-                      // showRestartButton={true}
-                      // autoRefresh={true}
-                      actionsChildren={false}
-                    />
+
+                  {/* Code Editor */}
+                  <div className="flex-1 flex flex-col h-full">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Editor
+                      </h3>
+                    </div>
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      <SandpackCodeEditor
+                        showTabs={false}
+                        showLineNumbers={true}
+                        showInlineErrors={true}
+                        wrapContent={true}
+                        readOnly={false}
+                        style={{
+                          height: "100%",
+                          fontSize: "14px",
+                          overflow: "auto",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Console Section */}
-                <div className="h-48 border-t border-gray-200 flex flex-col">
-                  <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-                    <h3 className="text-sm font-semibold text-gray-700">
-                      Console
-                    </h3>
+                {/* Preview Tab - Preview with Console */}
+                {showPreview && (
+                  <div
+                    className={`h-full w-full flex flex-col ${
+                      activeTab === "preview" ? "block" : "hidden"
+                    }`}
+                  >
+                    {/* Preview Area */}
+                    <div className={`w-full overflow-hidden ${isConsoleOpen ? 'flex-1' : 'h-full'}`}>
+                      <SandpackPreview
+                        style={{
+                          height: "100%",
+                          width: "100%",
+                          maxWidth: "100%",
+                        }}
+                        showOpenInCodeSandbox={true}
+                        showRefreshButton={true}
+                        actionsChildren={false}
+                      />
+                    </div>
+
+                    {/* Console Toggle Button */}
+                    <div className="border-t border-gray-200 bg-gray-50 px-3 py-2 flex items-center justify-between flex-shrink-0">
+                      <button
+                        onClick={() => setIsConsoleOpen(!isConsoleOpen)}
+                        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                      >
+                        <Terminal className="h-4 w-4" />
+                        Console
+                        {isConsoleOpen ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronUp className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Console Area */}
+                    {isConsoleOpen && (
+                      <div className="h-48 border-t border-gray-200 bg-white flex-shrink-0">
+                        <SandpackConsole
+                          style={{
+                            height: "100%",
+                            fontSize: "13px",
+                          }}
+                          showHeader={false}
+                          showSyntaxError={true}
+                          showOpenInCodeSandbox={false}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 min-h-0">
-                    <SandpackConsole
-                      style={{
-                        height: "100%",
-                      }}
-                      showHeader={false}
-                      maxMessageCount={1000}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      </Sandpack>
-      {/* </SandpackProvider> */}
+            </div>
+          </SandpackLayout>
+        </SandpackProvider>
+      </div>
     </div>
   );
 }
