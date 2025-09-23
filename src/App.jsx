@@ -3,6 +3,7 @@ import { Moon, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./components/ui/button";
 import PromptComposer from "./components/PromptComposer";
 import SandpackStudio from "./components/SandpackStudio";
+import { FetchConsole } from "./components/FetchConsole";
 import { loadSampleProjectFiles } from "./sandbox/sampleProject";
 import {
   loadReactTemplateForDownload,
@@ -98,7 +99,7 @@ export function DefaultLandingComponent() {
 
       setProjectFiles((prev) => ({
         ...prev,
-        "/src/landing/index.jsx": loadingComponent,
+        "/src/landing/index.tsx": loadingComponent,
       }));
 
       // First prompt: Replace the existing DefaultLandingComponent
@@ -137,7 +138,7 @@ export function DefaultLandingComponent() {
       const newFiles = {
         ...baseFiles,
         // Replace the existing DefaultLandingComponent with generated component
-        "/src/landing/index.jsx": transformedComponentCode,
+        "/src/landing/index.tsx": transformedComponentCode,
       };
 
       setProjectFiles(newFiles);
@@ -156,7 +157,7 @@ export function DefaultLandingComponent() {
       };
     } else {
       // Subsequent prompts: Modify existing files
-      const existingComponentPath = "/src/landing/index.jsx";
+      const existingComponentPath = "/src/landing/index.tsx";
       const existingCode = projectFiles[existingComponentPath];
 
       const { componentCode } = await modifyComponent(
@@ -175,7 +176,7 @@ export function DefaultLandingComponent() {
         path.startsWith("/src/components/ui/")
       );
       const currentComponents = currentComponentPaths.map((path) =>
-        path.replace("/src/components/ui/", "").replace(".jsx", "")
+        path.replace("/src/components/ui/", "").replace(/\.(jsx|tsx)$/, "")
       );
 
       const newComponents = usedComponents.filter(
@@ -197,6 +198,20 @@ export function DefaultLandingComponent() {
             newFiles[path] = newComponentFiles[path];
           }
         });
+
+        // Merge package.json dependencies for new components
+        if (newComponentFiles["/package.json"]) {
+          const existingPackageJson = JSON.parse(newFiles["/package.json"]);
+          const newPackageJson = JSON.parse(newComponentFiles["/package.json"]);
+          
+          // Merge dependencies
+          existingPackageJson.dependencies = {
+            ...existingPackageJson.dependencies,
+            ...newPackageJson.dependencies,
+          };
+          
+          newFiles["/package.json"] = JSON.stringify(existingPackageJson, null, 2);
+        }
       }
 
       // Transform @/ imports to relative imports for Sandpack compatibility
@@ -318,6 +333,9 @@ export function DefaultLandingComponent() {
           </div>
         </div>
       </main>
+      
+      {/* Fetch Console - Fixed positioned */}
+      <FetchConsole />
     </div>
   );
 }

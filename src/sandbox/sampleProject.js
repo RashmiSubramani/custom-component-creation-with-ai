@@ -10,13 +10,20 @@ export async function loadSampleProjectFiles() {
     shadcnGitHubFetcher.clearCache();
 
     const files = await loadReactTemplateWithGitHubComponents("my-component", [
-      "button",
+      "button", "card", "badge", "separator"
     ]);
 
     // Create a simple ShadCN-styled Button component that's guaranteed to work
-    files["/src/components/ui/button.jsx"] = `import React from 'react';
+    files["/src/components/ui/button.tsx"] = `import React from 'react';
+import { cn } from "@/lib/utils";
 
-const Button = React.forwardRef(({ variant = "default", size = "default", className = "", children, ...props }, ref) => {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "outline" | "secondary" | "ghost" | "destructive";
+  size?: "default" | "sm" | "lg";
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = "default", size = "default", className = "", children, ...props }, ref) => {
   
   // Base styles that look like ShadCN
   let baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
@@ -53,7 +60,7 @@ const Button = React.forwardRef(({ variant = "default", size = "default", classN
       sizeClasses = "h-10 px-4 py-2";
   }
   
-  const finalClassName = [baseClasses, variantClasses, sizeClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, variantClasses, sizeClasses, className);
   
   return (
     <button ref={ref} className={finalClassName} {...props}>
@@ -67,11 +74,14 @@ Button.displayName = "Button";
 export { Button };`;
 
     // Create a simple ShadCN-styled Card component
-    files["/src/components/ui/card.jsx"] = `import React from 'react';
+    files["/src/components/ui/card.tsx"] = `import React from 'react';
+import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef(({ className = "", children, ...props }, ref) => {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className = "", children, ...props }, ref) => {
   const baseClasses = "rounded-lg border bg-white text-gray-950 shadow-sm";
-  const finalClassName = [baseClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, className);
   
   return (
     <div ref={ref} className={finalClassName} {...props}>
@@ -80,9 +90,11 @@ const Card = React.forwardRef(({ className = "", children, ...props }, ref) => {
   );
 });
 
-const CardHeader = React.forwardRef(({ className = "", children, ...props }, ref) => {
+interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(({ className = "", children, ...props }, ref) => {
   const baseClasses = "flex flex-col space-y-1.5 p-6";
-  const finalClassName = [baseClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, className);
   
   return (
     <div ref={ref} className={finalClassName} {...props}>
@@ -91,9 +103,11 @@ const CardHeader = React.forwardRef(({ className = "", children, ...props }, ref
   );
 });
 
-const CardTitle = React.forwardRef(({ className = "", children, ...props }, ref) => {
+interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
+
+const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(({ className = "", children, ...props }, ref) => {
   const baseClasses = "text-2xl font-semibold leading-none tracking-tight";
-  const finalClassName = [baseClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, className);
   
   return (
     <h3 ref={ref} className={finalClassName} {...props}>
@@ -102,9 +116,11 @@ const CardTitle = React.forwardRef(({ className = "", children, ...props }, ref)
   );
 });
 
-const CardContent = React.forwardRef(({ className = "", children, ...props }, ref) => {
+interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(({ className = "", children, ...props }, ref) => {
   const baseClasses = "p-6 pt-0";
-  const finalClassName = [baseClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, className);
   
   return (
     <div ref={ref} className={finalClassName} {...props}>
@@ -122,9 +138,14 @@ CardContent.displayName = "CardContent";
 export { Card, CardHeader, CardTitle, CardContent };`;
 
     // Create a simple ShadCN-styled Badge component
-    files["/src/components/ui/badge.jsx"] = `import React from 'react';
+    files["/src/components/ui/badge.tsx"] = `import React from 'react';
+import { cn } from "@/lib/utils";
 
-const Badge = React.forwardRef(({ variant = "default", className = "", children, ...props }, ref) => {
+interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "secondary" | "destructive" | "outline";
+}
+
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(({ variant = "default", className = "", children, ...props }, ref) => {
   
   const baseClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
   
@@ -146,7 +167,7 @@ const Badge = React.forwardRef(({ variant = "default", className = "", children,
       variantClasses = "border-transparent bg-blue-600 text-white hover:bg-blue-700";
   }
   
-  const finalClassName = [baseClasses, variantClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, variantClasses, className);
   
   return (
     <div ref={ref} className={finalClassName} {...props}>
@@ -160,15 +181,21 @@ Badge.displayName = "Badge";
 export { Badge };`;
 
     // Create a simple ShadCN-styled Separator component
-    files["/src/components/ui/separator.jsx"] = `import React from 'react';
+    files["/src/components/ui/separator.tsx"] = `import React from 'react';
+import { cn } from "@/lib/utils";
 
-const Separator = React.forwardRef(({ className = "", orientation = "horizontal", decorative = true, ...props }, ref) => {
+interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
+  orientation?: "horizontal" | "vertical";
+  decorative?: boolean;
+}
+
+const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(({ className = "", orientation = "horizontal", decorative = true, ...props }, ref) => {
   
   const baseClasses = orientation === "horizontal" 
     ? "shrink-0 bg-gray-200 h-[1px] w-full" 
     : "shrink-0 bg-gray-200 w-[1px] h-full";
     
-  const finalClassName = [baseClasses, className].filter(Boolean).join(" ");
+  const finalClassName = cn(baseClasses, className);
   
   return (
     <div
@@ -186,13 +213,13 @@ Separator.displayName = "Separator";
 export { Separator };`;
 
     // Override the landing page to use elegant ShadCN components
-    files["/src/landing/index.jsx"] = `import React from 'react';
-import { Button } from '../components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Separator } from '../components/ui/separator';
+    files["/src/landing/index.tsx"] = `import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
-export function DefaultLandingComponent() {
+export function DefaultLandingComponent(): JSX.Element {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
@@ -316,7 +343,7 @@ const fallbackFiles = {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`,
 
@@ -328,16 +355,24 @@ const fallbackFiles = {
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.31",
+    "autoprefixer": "^10.4.16",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
+    "typescript": "^5.2.2",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.27",
     "tailwindcss": "^3.3.3",
@@ -364,20 +399,21 @@ module.exports = {
   plugins: [],
 }`,
 
-  "/src/main.jsx": `import React from 'react'
+  "/src/main.tsx": `import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+import App from './App.tsx'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 )`,
 
-  "/src/App.jsx": `import DefaultLandingComponent from './landing'
+  "/src/App.tsx": `import DefaultLandingComponent from './landing'
+import React from 'react'
 
-function App() {
+function App(): JSX.Element {
   return (
     <div className="min-h-screen bg-gray-50">
       <DefaultLandingComponent />
@@ -387,12 +423,61 @@ function App() {
 
 export default App`,
 
-  "/vite.config.js": `import { defineConfig } from 'vite'
+  "/vite.config.ts": `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
 })`,
+
+  "/tsconfig.json": `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path mapping for ShadCN */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}`,
+
+  "/tsconfig.node.json": `{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}`,
 
   "/src/index.css": `@tailwind base;
 @tailwind components;
@@ -412,12 +497,12 @@ code {
     monospace;
 }`,
 
-  "/src/landing/index.jsx": `import React from 'react';
-import { Button } from '../components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
+  "/src/landing/index.tsx": `import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-export function DefaultLandingComponent() {
+export function DefaultLandingComponent(): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-2xl text-center space-y-8">
@@ -479,4 +564,11 @@ export function DefaultLandingComponent() {
 }
 
 export default DefaultLandingComponent;`,
+
+  "/src/lib/utils.ts": `import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}`,
 };

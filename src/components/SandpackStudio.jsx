@@ -147,17 +147,17 @@ export default function SandpackStudio({
           key={filesKey}
           theme="light"
           customSetup={{
-            entry: "/src/main.jsx",
+            entry: "/src/main.tsx",
           }}
           files={projectFiles}
           options={{
             externalResources: [
               "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
             ],
-            activeFile: "/src/landing/index.jsx",
+            activeFile: "/src/landing/index.tsx",
             resizablePanels: true,
           }}
-          template="react"
+          template="react-ts"
           style={{
             height: "100%",
           }}
@@ -200,7 +200,7 @@ export default function SandpackStudio({
                   }`}
                 >
                   {/* File Explorer */}
-                  <div className="w-full lg:w-64 border-r border-gray-200 bg-white flex flex-col h-full">
+                  <div className="w-full lg:w-64 lg:min-w-64 lg:max-w-64 border-r border-gray-200 bg-white flex flex-col h-full flex-shrink-0">
                     <div className="p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
                       <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <FileText className="h-4 w-4" />
@@ -213,6 +213,8 @@ export default function SandpackStudio({
                         style={{
                           height: "100%",
                           minHeight: "300px",
+                          maxWidth: "256px",
+                          width: "256px",
                         }}
                       />
                     </div>

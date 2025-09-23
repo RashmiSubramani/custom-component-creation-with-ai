@@ -8,7 +8,7 @@ const templateFiles = {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="./src/main.jsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>`,
 
@@ -20,7 +20,8 @@ const templateFiles = {
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -36,6 +37,7 @@ const templateFiles = {
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.2.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -45,12 +47,55 @@ const templateFiles = {
 }`,
 
   tailwindConfig: `export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {},
   },
   plugins: [],
 };`,
+
+  tsconfigJson: `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path mapping for ShadCN */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}`,
+
+  tsconfigNodeJson: `{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}`,
 
   postcssConfig: `export default {
   plugins: {
@@ -59,18 +104,18 @@ const templateFiles = {
   },
 };`,
 
-  mainJsx: `import React from "react";
+  mainTsx: `import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
+import App from "./App.tsx";
 import "./index.css";
 
-const root = createRoot(document.getElementById("root"));
+const root = createRoot(document.getElementById("root")!);
 root.render(<App />);`,
 
-  appJsx: `import { DefaultLandingComponent } from "./landing/index.jsx";
+  appTsx: `import { DefaultLandingComponent } from "./landing/index.tsx";
 import React from "react";
 
-function App() {
+function App(): JSX.Element {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <DefaultLandingComponent />
@@ -84,28 +129,29 @@ export default App;`,
 @tailwind components;
 @tailwind utilities;`,
 
-  landingIndex: `import { Button } from "../components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
+  landingIndexTsx: `import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-export function DefaultLandingComponent() {
-  function handleClick() {
+export function DefaultLandingComponent(): JSX.Element {
+  function handleClick(): void {
     alert("ShadCN Button clicked!");
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-400 to-green-500 p-6">
+    <div className="w-full flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-400 to-green-500 p-6">
       <Card className="max-w-lg w-full">
         <CardHeader>
           <CardTitle className="text-center text-3xl bg-gradient-to-r from-blue-500 to-green-600 bg-clip-text text-transparent">
-            Welcome to ShadCN + Tailwind
+            Welcome to ShadCN + TypeScript
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-gray-600">
-            This component now uses ShadCN UI components!
+            This component now uses ShadCN UI components with TypeScript!
             <br />
-            <Badge variant="secondary" className="mt-2">All 51 components available</Badge>
+            <Badge variant="secondary" className="mt-2">All components with types</Badge>
           </p>
 
           <Button onClick={handleClick} className="w-full">
@@ -121,16 +167,32 @@ export function DefaultLandingComponent() {
       </Card>
     </div>
   );
-}`,
+}
 
+export default DefaultLandingComponent;`,
 
-  // utils file for cn function
-  utilsFile: `import { clsx } from "clsx";
+  // utils file for cn function with TypeScript
+  utilsFileTs: `import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs) {
+export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }`,
+
+  // Vite config for TypeScript
+  viteConfigTs: `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})`,
 };
 
 // Import ShadCN GitHub fetcher service
@@ -139,23 +201,29 @@ import { shadcnGitHubFetcher } from "../services/shadcnGitHubFetcher.js";
 // Removed complex loadReactTemplate function - using simpler loadReactTemplateWithAllComponents approach
 
 // New function: Load template with dynamic GitHub component fetching
-export async function loadReactTemplateWithGitHubComponents(projectName = "custom-component", componentNames = []) {
+export async function loadReactTemplateWithGitHubComponents(
+  projectName = "custom-component",
+  componentNames = []
+) {
   const packageJson = templateFiles.packageJsonTemplate.replace(
     /<%= projectName %>/g,
     projectName
   );
 
-  // Base template files
+  // Base template files with TypeScript
   const baseFiles = {
     "/index.html": templateFiles.indexHtml,
     "/package.json": packageJson,
-    "/src/main.jsx": templateFiles.mainJsx,
-    "/src/App.jsx": templateFiles.appJsx,
+    "/src/main.tsx": templateFiles.mainTsx,
+    "/src/App.tsx": templateFiles.appTsx,
     "/src/index.css": templateFiles.indexCss,
     "/tailwind.config.js": templateFiles.tailwindConfig,
     "/postcss.config.js": templateFiles.postcssConfig,
-    "/src/landing/index.jsx": templateFiles.landingIndex,
-    "/src/lib/utils.js": templateFiles.utilsFile,
+    "/tsconfig.json": templateFiles.tsconfigJson,
+    "/tsconfig.node.json": templateFiles.tsconfigNodeJson,
+    "/vite.config.ts": templateFiles.viteConfigTs,
+    "/src/landing/index.tsx": templateFiles.landingIndexTsx,
+    "/src/lib/utils.ts": templateFiles.utilsFileTs,
   };
 
   // If no specific components requested, return base template
@@ -164,42 +232,53 @@ export async function loadReactTemplateWithGitHubComponents(projectName = "custo
   }
 
   try {
-    
     // Fetch components from GitHub
-    const { files: componentFiles, dependencies } = await shadcnGitHubFetcher.fetchMultipleComponents(componentNames);
-    
+    const { files: componentFiles, dependencies } =
+      await shadcnGitHubFetcher.fetchMultipleComponents(componentNames);
+
     // Update package.json with dependencies
     const updatedPackageJson = JSON.parse(packageJson);
     const commonDeps = shadcnGitHubFetcher.getCommonDependencies();
-    
-    // Add common ShadCN dependencies
+    const componentDeps = shadcnGitHubFetcher.getComponentDependencies();
+
+    // Add common ShadCN dependencies (minimal set)
     updatedPackageJson.dependencies = {
       ...updatedPackageJson.dependencies,
-      ...commonDeps
+      ...commonDeps,
     };
-    
-    // Add specific component dependencies
-    dependencies.forEach(dep => {
+
+    // Add specific component dependencies only for components being used
+    componentNames.forEach((componentName) => {
+      const requiredDeps = componentDeps[componentName] || [];
+      requiredDeps.forEach((dep) => {
+        if (!updatedPackageJson.dependencies[dep]) {
+          updatedPackageJson.dependencies[dep] = "latest";
+        }
+      });
+    });
+
+    // Add any dependencies detected from component imports
+    dependencies.forEach((dep) => {
       if (!updatedPackageJson.dependencies[dep]) {
         updatedPackageJson.dependencies[dep] = "latest";
       }
     });
 
-
     return {
       ...baseFiles,
       "/package.json": JSON.stringify(updatedPackageJson, null, 2),
-      ...componentFiles
+      ...componentFiles,
     };
-
   } catch (error) {
     // Fallback to base template
     return baseFiles;
   }
 }
 
-// Backward compatibility - now returns minimal template, components loaded on demand
-export function loadReactTemplateWithAllComponents(projectName = "custom-component") {
+// Backward compatibility - now returns minimal TypeScript template
+export function loadReactTemplateWithAllComponents(
+  projectName = "custom-component"
+) {
   const packageJson = templateFiles.packageJsonTemplate.replace(
     /<%= projectName %>/g,
     projectName
@@ -208,13 +287,16 @@ export function loadReactTemplateWithAllComponents(projectName = "custom-compone
   return {
     "/index.html": templateFiles.indexHtml,
     "/package.json": packageJson,
-    "/src/main.jsx": templateFiles.mainJsx,
-    "/src/App.jsx": templateFiles.appJsx,
+    "/src/main.tsx": templateFiles.mainTsx,
+    "/src/App.tsx": templateFiles.appTsx,
     "/src/index.css": templateFiles.indexCss,
     "/tailwind.config.js": templateFiles.tailwindConfig,
     "/postcss.config.js": templateFiles.postcssConfig,
-    "/src/landing/index.jsx": templateFiles.landingIndex,
-    "/src/lib/utils.js": templateFiles.utilsFile,
+    "/tsconfig.json": templateFiles.tsconfigJson,
+    "/tsconfig.node.json": templateFiles.tsconfigNodeJson,
+    "/vite.config.ts": templateFiles.viteConfigTs,
+    "/src/landing/index.tsx": templateFiles.landingIndexTsx,
+    "/src/lib/utils.ts": templateFiles.utilsFileTs,
   };
 }
 
@@ -234,4 +316,3 @@ export function loadReactTemplateForDownload(projectName = "custom-component") {
     "/postcss.config.js": templateFiles.postcssConfig,
   };
 }
-

@@ -2,17 +2,17 @@
 // Detects which components need to be fetched from GitHub
 
 /**
- * Detect ShadCN components used in generated code
+ * Detect ShadCN components used in generated code (supports both .jsx and .tsx)
  * @param {string} code - The generated component code
  * @returns {string[]} - Array of component names that need to be fetched
  */
 export function detectShadCNComponents(code) {
   const usedComponents = new Set();
   
-  // Pattern 1: Standard ShadCN imports
+  // Pattern 1: Standard ShadCN imports with @/ paths
   // import { Button, Card } from "@/components/ui/button"
   // import { Calendar } from "@/components/ui/calendar"
-  const importRegex = /import\s*\{([^}]+)\}\s*from\s*["']@?\/components\/ui\/([^"']+)["']/g;
+  const importRegex = /import\s*\{([^}]+)\}\s*from\s*["']@\/components\/ui\/([^"']+)["']/g;
   
   let match;
   while ((match = importRegex.exec(code)) !== null) {
@@ -21,6 +21,7 @@ export function detectShadCNComponents(code) {
   }
   
   // Pattern 2: Relative imports  
+  // import { Button } from "../components/ui/button"
   // import { Button } from "./components/ui/button"
   const relativeImportRegex = /import\s*\{([^}]+)\}\s*from\s*["']\.\.?\/components\/ui\/([^"']+)["']/g;
   
@@ -81,15 +82,20 @@ function isShadCNComponent(componentName) {
 export function enhancePromptForShadCN(prompt) {
   const shadcnInstructions = `
 
-IMPORTANT - SHADCN IMPORT INSTRUCTIONS:
+IMPORTANT - SHADCN + TYPESCRIPT INSTRUCTIONS:
+- **TYPESCRIPT**: Generate TypeScript React components with proper type annotations
+- Use ": JSX.Element" return type for component functions
+- Use ": void" for event handlers that don't return values  
+- Use proper TypeScript types for state, props, and variables
 - Use ONLY standard ShadCN import syntax: import { ComponentName } from "@/components/ui/component-name"
 - Examples:
   - import { Button } from "@/components/ui/button"
   - import { Calendar } from "@/components/ui/calendar"
   - import { Card, CardHeader, CardContent } from "@/components/ui/card"
 - DO NOT use relative imports like "../components/ui/button"
-- DO NOT import external libraries - only use ShadCN components
+- DO NOT import external libraries - only use ShadCN components and built-in React features
 - Component names should match official ShadCN documentation
+- Use useState<Type> with TypeScript generics for state management
 
 `;
 
