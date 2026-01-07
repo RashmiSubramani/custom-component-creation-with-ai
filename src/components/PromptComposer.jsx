@@ -25,8 +25,9 @@ export default function PromptComposer({
     compilationStatusRef.current = compilationStatus;
   }, [compilationStatus]);
   const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem("cf.chatMessages");
-    return saved ? JSON.parse(saved) : [WELCOME_MESSAGE];
+    // Clear localStorage on each page load/reload
+    localStorage.removeItem("cf.chatMessages");
+    return [WELCOME_MESSAGE];
   });
 
   const [currentInput, setCurrentInput] = useState("");
@@ -38,7 +39,7 @@ export default function PromptComposer({
   const textareaRef = useRef(null);
   const compilationStatusRef = useRef(compilationStatus);
 
-  // Persist messages to localStorage
+  // Persist messages to localStorage during session (cleared on page reload)
   useEffect(() => {
     localStorage.setItem("cf.chatMessages", JSON.stringify(messages));
   }, [messages]);

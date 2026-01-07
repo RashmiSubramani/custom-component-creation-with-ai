@@ -146,7 +146,28 @@ export default function SandpackStudio({
         <SandpackProvider
           key={filesKey}
           theme="light"
+          // customSetup={{
+          //   entry: "/src/main.tsx",
+          // }}
           customSetup={{
+            dependencies: {
+              react: "^18.2.0",
+              "react-dom": "^18.2.0",
+              tailwindcss: "^3.4.0",
+              postcss: "^8.4.31",
+              autoprefixer: "^10.4.16",
+              "class-variance-authority": "^0.7.0",
+              clsx: "^2.0.0",
+              "tailwind-merge": "^2.0.0",
+              "lucide-react": "^0.263.1",
+            },
+            devDependencies: {
+              "@types/react": "^18.2.15",
+              "@types/react-dom": "^18.2.7",
+              "@vitejs/plugin-react": "^4.0.3",
+              typescript: "^5.2.2",
+              vite: "^4.4.5",
+            },
             entry: "/src/main.tsx",
           }}
           files={projectFiles}
@@ -252,7 +273,11 @@ export default function SandpackStudio({
                     }`}
                   >
                     {/* Preview Area */}
-                    <div className={`w-full overflow-hidden ${isConsoleOpen ? 'flex-1' : 'h-full'}`}>
+                    <div
+                      className={`w-full overflow-hidden ${
+                        isConsoleOpen ? "flex-1" : "h-full"
+                      }`}
+                    >
                       <SandpackPreview
                         style={{
                           height: "100%",

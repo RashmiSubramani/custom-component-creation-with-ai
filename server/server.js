@@ -3,10 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
 
-dotenv.config({ path: "./server/.env" });
+dotenv.config();
 
-console.log("process.env.OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
-console.log("process.env.ANTHROPIC_API_KEY:", process.env.ANTHROPIC_API_KEY);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

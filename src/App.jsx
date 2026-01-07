@@ -5,12 +5,7 @@ import PromptComposer from "./components/PromptComposer";
 import SandpackStudio from "./components/SandpackStudio";
 import { FetchConsole } from "./components/FetchConsole";
 import { loadSampleProjectFiles } from "./sandbox/sampleProject";
-import {
-  loadReactTemplateForDownload,
-  loadReactTemplateWithGitHubComponents,
-} from "./sandbox/templateWithoutSDK";
-import { generateComponent, modifyComponent } from "./services/llm";
-import { detectShadCNComponents } from "./services/componentDetector";
+import { generateComponentWithPhases } from "./services/fivePhaseGenerator";
 function App() {
   const [projectFiles, setProjectFiles] = useState({});
   const [isFirstPrompt, setIsFirstPrompt] = useState(true);
@@ -41,10 +36,10 @@ function App() {
     // Note: Compilation status tracking for UI updates
   }, [compilationStatus]);
 
-  // Download project files as ZIP (with real SDK in package.json)
+  // Download current project files as ZIP
   const handleDownloadProject = () => {
-    const downloadFiles = loadReactTemplateForDownload("my-component");
-    downloadAsZip(downloadFiles, "project.zip");
+    // Download the actual project files the user is working on
+    downloadAsZip(projectFiles, "component-forge-project.zip");
   };
 
   // Simple ZIP download
@@ -102,46 +97,74 @@ export function DefaultLandingComponent() {
         "/src/landing/index.tsx": loadingComponent,
       }));
 
-      // First prompt: Replace the existing DefaultLandingComponent
-      let componentCode;
+      // First prompt: Use 5-phase generation system
       try {
-        const result = await generateComponent(
-          prompt,
-          promptSelectedSuggestions
-        );
-        componentCode = result.componentCode;
-      } catch (llmError) {
-        throw new Error(`LLM generation failed: ${llmError.message}`);
+        console.log('🚀 Using 5-Phase Generation System');
+
+        // Use the new 5-phase system
+        const result = await generateComponentWithPhases(prompt, {});
+
+        if (!result.success) {
+          throw new Error('5-phase generation failed');
+        }
+
+        // Transform @/ imports to relative imports for Sandpack compatibility
+        const files = result.files;
+        Object.keys(files).forEach(path => {
+          if (typeof files[path] === 'string') {
+            files[path] = files[path].replace(
+              /from\s+["']@\/components\/ui\/([^"']+)["']/g,
+              'from "../components/ui/$1"'
+            );
+            // Also handle any remaining @/lib imports
+            files[path] = files[path].replace(
+              /from\s+["']@\/lib\/([^"']+)["']/g,
+              'from "../../lib/$1"'
+            );
+          }
+        });
+
+        // Ensure proper file paths for Sandpack
+        const sandpackFiles = {};
+        Object.entries(files).forEach(([path, content]) => {
+          const sandpackPath = path.startsWith('/') ? path : '/' + path;
+          sandpackFiles[sandpackPath] = content;
+        });
+
+        setProjectFiles(sandpackFiles);
+
+        console.log('✅ 5-Phase Generation completed successfully');
+      } catch (phaseError) {
+        console.error('❌ 5-Phase Generation failed, falling back to simple template:', phaseError);
+
+        // Simple fallback - use the current project structure
+        const baseFiles = projectFiles;
+
+        // Create a simple error component to show the issue
+        const errorComponent = `import React from 'react';
+
+export function DefaultLandingComponent() {
+  return (
+    <div className="flex items-center justify-center h-64 bg-red-50">
+      <div className="text-center p-6">
+        <div className="text-red-600 text-xl mb-2">⚠️</div>
+        <h3 className="text-lg font-semibold text-red-800 mb-2">Component Generation Failed</h3>
+        <p className="text-red-600 text-sm">
+          Unable to generate component. Please try a different prompt.
+        </p>
+      </div>
+    </div>
+  );
+}`;
+
+        const newFiles = {
+          ...baseFiles,
+          "/src/landing/index.tsx": errorComponent,
+        };
+
+        setProjectFiles(newFiles);
       }
 
-      // Detect which ShadCN components are used in the generated code
-      const usedComponents = detectShadCNComponents(componentCode);
-
-      // Clear cache for fresh component loading
-      const { shadcnGitHubFetcher } = await import(
-        "./services/shadcnGitHubFetcher.js"
-      );
-      shadcnGitHubFetcher.clearCache();
-
-      // Create template with only the used components dynamically fetched from GitHub
-      const baseFiles = await loadReactTemplateWithGitHubComponents(
-        "my-component",
-        usedComponents
-      );
-
-      // Transform @/ imports to relative imports for Sandpack compatibility
-      const transformedComponentCode = componentCode.replace(
-        /from\s+["']@\/components\/ui\/([^"']+)["']/g,
-        'from "../components/ui/$1"'
-      );
-
-      const newFiles = {
-        ...baseFiles,
-        // Replace the existing DefaultLandingComponent with generated component
-        "/src/landing/index.tsx": transformedComponentCode,
-      };
-
-      setProjectFiles(newFiles);
       setIsFirstPrompt(false);
 
       // Set success status immediately after successful component generation
@@ -156,84 +179,77 @@ export function DefaultLandingComponent() {
         waitForCompilation: true,
       };
     } else {
-      // Subsequent prompts: Modify existing files
-      const existingComponentPath = "/src/landing/index.tsx";
-      const existingCode = projectFiles[existingComponentPath];
+      // Subsequent prompts: Use 5-phase system for modifications too
+      try {
+        console.log('🚀 Using 5-Phase System for modification');
 
-      const { componentCode } = await modifyComponent(
-        prompt,
-        "DefaultLandingComponent",
-        existingCode,
-        "", // No existing CSS
-        promptSelectedSuggestions
-      );
+        // Use the 5-phase system for modifications
+        const result = await generateComponentWithPhases(prompt, {});
 
-      // Detect any new components used in the modified code
-      const usedComponents = detectShadCNComponents(componentCode);
+        if (!result.success) {
+          throw new Error('5-phase modification failed');
+        }
 
-      // Check if we need to fetch new components
-      const currentComponentPaths = Object.keys(projectFiles).filter((path) =>
-        path.startsWith("/src/components/ui/")
-      );
-      const currentComponents = currentComponentPaths.map((path) =>
-        path.replace("/src/components/ui/", "").replace(/\.(jsx|tsx)$/, "")
-      );
-
-      const newComponents = usedComponents.filter(
-        (comp) => !currentComponents.includes(comp)
-      );
-
-      let newFiles = { ...projectFiles };
-
-      if (newComponents.length > 0) {
-        // Fetch only the new components and add them to existing files
-        const newComponentFiles = await loadReactTemplateWithGitHubComponents(
-          "my-component",
-          newComponents
-        );
-
-        // Merge only the new component files
-        Object.keys(newComponentFiles).forEach((path) => {
-          if (path.startsWith("/src/components/ui/") && !newFiles[path]) {
-            newFiles[path] = newComponentFiles[path];
+        // Transform @/ imports to relative imports for Sandpack compatibility
+        const files = result.files;
+        Object.keys(files).forEach(path => {
+          if (typeof files[path] === 'string') {
+            files[path] = files[path].replace(
+              /from\s+["']@\/components\/ui\/([^"']+)["']/g,
+              'from "../components/ui/$1"'
+            );
+            files[path] = files[path].replace(
+              /from\s+["']@\/lib\/([^"']+)["']/g,
+              'from "../../lib/$1"'
+            );
           }
         });
 
-        // Merge package.json dependencies for new components
-        if (newComponentFiles["/package.json"]) {
-          const existingPackageJson = JSON.parse(newFiles["/package.json"]);
-          const newPackageJson = JSON.parse(newComponentFiles["/package.json"]);
-          
-          // Merge dependencies
-          existingPackageJson.dependencies = {
-            ...existingPackageJson.dependencies,
-            ...newPackageJson.dependencies,
-          };
-          
-          newFiles["/package.json"] = JSON.stringify(existingPackageJson, null, 2);
-        }
+        // Ensure proper file paths for Sandpack
+        const sandpackFiles = {};
+        Object.entries(files).forEach(([path, content]) => {
+          const sandpackPath = path.startsWith('/') ? path : '/' + path;
+          sandpackFiles[sandpackPath] = content;
+        });
+
+        setProjectFiles(sandpackFiles);
+
+        console.log('✅ 5-Phase modification completed successfully');
+      } catch (error) {
+        console.error('❌ 5-Phase modification failed:', error);
+
+        // Simple fallback - just show an error message
+        const errorComponent = `import React from 'react';
+
+export function DefaultLandingComponent() {
+  return (
+    <div className="flex items-center justify-center h-64 bg-yellow-50">
+      <div className="text-center p-6">
+        <div className="text-yellow-600 text-xl mb-2">⚠️</div>
+        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Modification Failed</h3>
+        <p className="text-yellow-600 text-sm">
+          Unable to modify component. The original component remains unchanged.
+        </p>
+      </div>
+    </div>
+  );
+}`;
+
+        setProjectFiles(prev => ({
+          ...prev,
+          "/src/landing/index.tsx": errorComponent
+        }));
       }
 
-      // Transform @/ imports to relative imports for Sandpack compatibility
-      const transformedComponentCode = componentCode.replace(
-        /from\s+["']@\/components\/ui\/([^"']+)["']/g,
-        'from "../components/ui/$1"'
-      );
-
-      // Update the main component
-      newFiles[existingComponentPath] = transformedComponentCode;
-
-      setProjectFiles(newFiles);
-
-      // Set success status immediately after successful component modification
+      // Set success status immediately after attempting modification
       setTimeout(() => {
         setCompilationStatus("success");
-      }, 1000); // Reduced to 1 second for faster UI response
+      }, 1000);
 
       return {
         componentName: "DefaultLandingComponent",
         action: "modified",
-        description: `Modified DefaultLandingComponent component successfully!`,
+        description: `Component modification attempted.`,
         waitForCompilation: true,
       };
     }

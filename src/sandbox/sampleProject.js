@@ -1,17 +1,10 @@
-import { loadReactTemplateWithGitHubComponents } from "./templateWithoutSDK.js";
+// No imports needed - using local fallback components
 
 // Function to load initial project with ShadCN components
 export async function loadSampleProjectFiles() {
   try {
-    // Clear cache to ensure fresh components with fixed transformation
-    const { shadcnGitHubFetcher } = await import(
-      "../services/shadcnGitHubFetcher.js"
-    );
-    shadcnGitHubFetcher.clearCache();
-
-    const files = await loadReactTemplateWithGitHubComponents("my-component", [
-      "button", "card", "badge", "separator"
-    ]);
+    // Start with clean base template (no GitHub fetching)
+    const files = { ...fallbackFiles };
 
     // Create a simple ShadCN-styled Button component that's guaranteed to work
     files["/src/components/ui/button.tsx"] = `import React from 'react';
