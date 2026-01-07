@@ -14,7 +14,17 @@ const app = express();
 const PORT = process.env.PORT || 3004;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173", // Local development
+    "http://localhost:3000", // Local development alternative
+    "https://custom-component-creation-with-ai.vercel.app", // Production frontend
+    "https://*.vercel.app" // Allow all Vercel subdomains
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Anthropic API proxy endpoint
