@@ -1,41 +1,103 @@
-# Component Forge JS
+# Component Forge
 
-A React Component Generator MVP with Tailwind CSS, shadcn-style UI components, and Sandpack integration.
+**Version 1.0 Beta** - AI-Powered React Component Generator
+
+An intelligent React component generation tool powered by OpenAI, featuring a 5-phase AI workflow, real-time code preview, and seamless ShadCN component integration.
+
+## 🚀 Live Demo
+
+- **Production App**: [https://custom-component-creation-with-ai.vercel.app](https://custom-component-creation-with-ai.vercel.app)
+- **Status**: Beta - Active development with known limitations
 
 ## Features
 
-- **3-pane layout**: Prompt Composer, Code Editor with File Explorer, and Live Preview
-- **Variable templating**: Support for `{{variables}}` and `{{name=default value}}` syntax
-- **Future-proof architecture**: Ready for multiple frameworks/languages (currently locked to React + JavaScript)
-- **localStorage persistence**: Template, variables, and settings are automatically saved
-- **Copy-to-clipboard**: Easy file copying from the code editor
-- **Live preview**: Real-time preview of generated code using Sandpack
+### ✅ Current (v1.0 Beta)
+- **AI-Powered Generation**: Chat-based interface for natural language component requests
+- **5-Phase AI Workflow**: Design → Registry → Backend Merge → Code Generation → Final Integration
+- **53 ShadCN Components**: Comprehensive component library integration
+- **Real-time Preview**: Live code editing and preview with Sandpack
+- **Collapsible Interface**: Optimized workspace with collapsible chat panel
+- **Professional UI**: Clean, minimalistic design with gray color palette
+- **File Management**: Browse, edit, and download generated project files
+
+### ⚠️ Known Limitations (Beta)
+- **Error Handling**: Some edge cases may not be handled gracefully
+- **API Dependencies**: Requires OpenAI API key; failures may occur if quota exceeded
+- **Generation Consistency**: AI responses may vary; complex requests might need refinement
+- **Performance**: Large component generations may take time to process
+- **Browser Compatibility**: Optimized for modern browsers; older versions may have issues
 
 ## Tech Stack
 
+### Frontend (Vercel)
 - **Vite + React** (JavaScript)
 - **TailwindCSS** for styling
-- **shadcn-style UI components** with class-variance-authority
+- **ShadCN UI components** with class-variance-authority
 - **@codesandbox/sandpack-react** for code editing and preview
 - **lucide-react** for icons
 
+### Backend (Railway)
+- **Node.js + Express** API server
+- **OpenAI API** integration for AI component generation
+- **CORS** configuration for cross-origin requests
+
+### Deployment
+- **Frontend**: Vercel (automatic deployments from GitHub)
+- **Backend**: Railway (automatic deployments from GitHub)
+- **Domain**: Custom domain ready
+
 ## Getting Started
 
-### Installation
+### Prerequisites
 
+1. **OpenAI API Key** - Required for AI component generation
+   - Sign up at [https://platform.openai.com/](https://platform.openai.com/)
+   - Create an API key from the API Keys section
+   - **Note**: API usage will incur charges based on OpenAI's pricing
+
+2. **Node.js** - Version 18.0.0 or higher
+
+### Local Development
+
+#### 1. Clone and Install Frontend
 ```bash
-# Install dependencies
+# Clone repository
+git clone <your-repo-url>
+cd component-forge
+
+# Install frontend dependencies
+npm install
+```
+
+#### 2. Setup Backend
+```bash
+# Navigate to server directory
+cd server
+
+# Install backend dependencies
 npm install
 
-# Start development server
-npm run dev
+# Create environment file
+cp .env.example .env
 
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+# Add your API keys to .env
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here  # Optional
+PORT=3004
 ```
+
+#### 3. Start Both Servers
+```bash
+# Terminal 1: Start backend (from /server directory)
+npm start
+
+# Terminal 2: Start frontend (from root directory)
+npm run dev
+```
+
+#### 4. Access Application
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3004
 
 ### Development Commands
 
@@ -49,36 +111,42 @@ npm run dev
 
 ## Usage
 
-### 1. Prompt Templates
+### 1. Chat Interface
 
-Write prompts using variable placeholders:
+Use natural language to request components:
 
 ```
-Create a {{componentType=Button}} component that:
-- Uses {{styleFramework=Tailwind CSS}} for styling
-- Has {{variantCount=3}} different variants
-- Supports {{sizesNeeded=small, medium, large}} sizes
+"Create a login form with email and password fields"
+"Make a pricing card with three tiers"
+"Build a navigation menu with dropdown"
+"Create a data table with sorting and pagination"
 ```
 
-### 2. Variable Syntax
+### 2. AI Workflow
 
-- `{{variableName}}` - Simple variable placeholder
-- `{{name=default value}}` - Variable with default value
-- Variables are auto-detected and added to the Variables panel
+The system follows a 5-phase process:
 
-### 3. Settings
+1. **Design Phase**: Analyzes your request and selects needed ShadCN components
+2. **Registry Phase**: Fetches component definitions from ShadCN registry
+3. **Backend Merge**: Integrates components with your existing codebase
+4. **Code Generation**: Uses AI to create the final component code
+5. **Final Integration**: Delivers the complete, working component
 
-- **Target**: Currently locked to React + JavaScript (future-ready for other frameworks)
-- **Style Mode**: Choose between Tailwind CSS, Plain CSS, or Styled Components
-- **Design System**: Select from shadcn/ui, Chakra UI, Ant Design, or Custom
-- **Dependencies**: Comma-separated whitelist (non-functional for now)
+### 3. Interface Components
 
-### 4. Code Editor
+- **Chat Panel**: Left sidebar for conversation with AI (collapsible)
+- **Code Editor**: Middle pane with file explorer and code editing
+- **Live Preview**: Right pane showing real-time component preview
+- **Download**: Export your generated project as ZIP file
 
-- **File Explorer**: Browse sample project files
-- **Read-only toggle**: Enable/disable editing
-- **Copy functionality**: Copy individual files to clipboard
-- **Live preview**: Real-time preview of your components
+### 4. Supported Components
+
+53 ShadCN components including:
+- Forms: `input`, `textarea`, `checkbox`, `radio-group`, `select`
+- Navigation: `tabs`, `breadcrumb`, `navigation-menu`, `sidebar`
+- Data Display: `table`, `card`, `badge`, `avatar`, `chart`
+- Feedback: `alert`, `toast`, `progress`, `spinner`
+- Overlay: `dialog`, `sheet`, `popover`, `tooltip`
 
 ## Project Structure
 
@@ -136,15 +204,53 @@ const payload = buildGenerationPayload({
 - **Composition over inheritance**: Prefer composing smaller components
 - **Meaningful comments**: Add brief comments for non-obvious logic only
 
+## Beta Disclaimer
+
+This is a **Beta version (v1.0)** with known limitations:
+
+- **Active Development**: Features and behavior may change
+- **Error Handling**: Some edge cases may cause unexpected behavior
+- **API Dependencies**: Requires OpenAI API key and quota availability
+- **Performance**: Complex generations may be slow or fail
+- **Data Persistence**: No user accounts; all data is session-based
+
+**Use for**: Learning, prototyping, and development exploration
+**Not recommended for**: Production applications or critical projects
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Cannot connect to server"**
+   - Check if backend is running on port 3004
+   - Verify OpenAI API key is set correctly
+   - Check API quota/billing status
+
+2. **"Component generation failed"**
+   - Try simpler prompts
+   - Check browser console for errors
+   - Refresh page and try again
+
+3. **Preview not loading**
+   - Hard refresh browser (Ctrl+Shift+R)
+   - Check for JavaScript errors in console
+   - Ensure all dependencies are installed
+
 ## Future Enhancements
 
+### v1.1 (Planned)
+- [ ] Improved error handling and user feedback
+- [ ] Better loading states and progress indicators
+- [ ] Enhanced component customization options
+- [ ] Undo/redo functionality
+
+### v2.0 (Future)
 - [ ] Multiple framework support (Vue, Angular, Svelte)
 - [ ] TypeScript support
-- [ ] Backend integration for actual component generation
-- [ ] More design system templates
-- [ ] Advanced template features (loops, conditionals)
+- [ ] User accounts and project persistence
 - [ ] Export to CodeSandbox/GitHub
-- [ ] Component library integration
+- [ ] Custom design system integration
+- [ ] Advanced AI prompting features
 
 ## Contributing
 
