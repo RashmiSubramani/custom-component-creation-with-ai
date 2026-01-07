@@ -264,43 +264,32 @@ export default function PromptComposer({
             }`}
           >
             {message.type === "assistant" && (
-              <div
-                className={`p-2 rounded-full ${
-                  message.isSuccess
-                    ? "bg-green-100"
-                    : message.isCompiling
-                    ? "bg-orange-100"
-                    : "bg-blue-100"
-                }`}
-              >
-                {message.isSuccess ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : message.isCompiling ? (
-                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Bot className="h-4 w-4 text-blue-600" />
-                )}
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                <span className="text-white text-xs font-medium">AI</span>
               </div>
             )}
 
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.type === "user"
-                  ? "bg-blue-600 text-white ml-auto"
-                  : message.isSuccess
-                  ? "bg-green-50 text-green-900 border border-green-200"
-                  : message.isCompiling
-                  ? "bg-orange-50 text-orange-900 border border-orange-200"
-                  : "bg-gray-100 text-gray-900"
+              className={`max-w-[75%] ${
+                message.type === "user" ? "order-first" : ""
               }`}
             >
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                {message.content}
-              </div>
-
               <div
-                className={`text-xs mt-2 ${
-                  message.type === "user" ? "text-blue-100" : "text-gray-500"
+                className={`rounded-2xl px-4 py-3 ${
+                  message.type === "user"
+                    ? "bg-gray-800 text-white"
+                    : "bg-white border border-gray-100 text-gray-900"
+                }`}
+              >
+                <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                  {message.content}
+                </div>
+              </div>
+              <div
+                className={`text-xs mt-1.5 px-1 ${
+                  message.type === "user"
+                    ? "text-right text-gray-400"
+                    : "text-gray-400"
                 }`}
               >
                 {message.timestamp}
@@ -308,7 +297,7 @@ export default function PromptComposer({
             </div>
 
             {message.type === "user" && (
-              <div className="p-2 bg-gray-100 rounded-full">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                 <User className="h-4 w-4 text-gray-600" />
               </div>
             )}
@@ -317,10 +306,10 @@ export default function PromptComposer({
 
         {isGenerating && (
           <div className="flex gap-3 justify-start">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <Bot className="h-4 w-4 text-blue-600" />
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+              <span className="text-white text-xs font-medium">AI</span>
             </div>
-            <div className="bg-gray-100 text-gray-900 rounded-lg p-3">
+            <div className="bg-white border border-gray-100 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -333,9 +322,7 @@ export default function PromptComposer({
                     style={{ animationDelay: "0.2s" }}
                   ></div>
                 </div>
-                <span className="text-sm text-gray-600">
-                  Generating component...
-                </span>
+                <span className="text-sm text-gray-600">Thinking...</span>
               </div>
             </div>
           </div>
@@ -353,8 +340,8 @@ export default function PromptComposer({
               value={currentInput}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              placeholder="Describe the component you want to create... (try: 'form /' or 'table /')"
-              className="min-h-[60px] max-h-32 resize-none border-gray-300 focus:border-blue-400 focus:ring-blue-400/20"
+              placeholder="Describe the component you want to create..."
+              className="min-h-[60px] max-h-32 resize-none border-2 border-gray-300 focus:border-gray-500 focus:ring-gray-500/20 shadow-sm focus:shadow-md transition-all duration-200"
               disabled={isGenerating}
             />
 
@@ -372,23 +359,24 @@ export default function PromptComposer({
           <Button
             onClick={handleSend}
             disabled={!currentInput.trim() || isGenerating}
-            className="h-[60px] px-4 bg-blue-600 hover:bg-blue-700"
+            className="h-[60px] px-6 bg-gray-700 hover:bg-gray-600 shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-gray-700 hover:border-gray-600 font-semibold"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-5 w-5" />
           </Button>
         </div>
-        <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
-          <div className="flex items-center gap-4">
+        <div className="flex justify-between items-center mt-3 text-sm text-gray-600 font-medium">
+          <div className="flex items-center gap-6">
             <span>Press Shift+Enter for new line</span>
-            <span>Type keyword + space + / for suggestions</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {selectedSuggestionIds.length > 0 && (
-              <span className="text-blue-600">
+              <span className="text-gray-700 bg-gray-100 px-2 py-1 rounded-md font-semibold">
                 {selectedSuggestionIds.length} selected
               </span>
             )}
-            <span>{currentInput.length} characters</span>
+            <span className="text-gray-700">
+              {currentInput.length} characters
+            </span>
           </div>
         </div>
       </div>

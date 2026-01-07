@@ -19,13 +19,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "default", size = "default", className = "", children, ...props }, ref) => {
   
   // Base styles that look like ShadCN
-  let baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+  let baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
   
   // Variant styles
   let variantClasses = "";
   switch (variant) {
     case "default":
-      variantClasses = "bg-blue-600 text-white hover:bg-blue-700";
+      variantClasses = "bg-gray-700 text-white hover:bg-gray-600";
       break;
     case "outline":
       variantClasses = "border border-gray-300 bg-white hover:bg-gray-50 hover:text-gray-900";
@@ -37,7 +37,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variantClasses = "hover:bg-gray-50 hover:text-gray-900";
       break;
     default:
-      variantClasses = "bg-blue-600 text-white hover:bg-blue-700";
+      variantClasses = "bg-gray-700 text-white hover:bg-gray-600";
   }
   
   // Size styles
@@ -140,12 +140,12 @@ interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(({ variant = "default", className = "", children, ...props }, ref) => {
   
-  const baseClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+  const baseClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2";
   
   let variantClasses = "";
   switch (variant) {
     case "default":
-      variantClasses = "border-transparent bg-blue-600 text-white hover:bg-blue-700";
+      variantClasses = "border-transparent bg-gray-700 text-white hover:bg-gray-600";
       break;
     case "secondary":
       variantClasses = "border-transparent bg-gray-100 text-gray-900 hover:bg-gray-200";
@@ -157,7 +157,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(({ variant = "default
       variantClasses = "text-gray-950";
       break;
     default:
-      variantClasses = "border-transparent bg-blue-600 text-white hover:bg-blue-700";
+      variantClasses = "border-transparent bg-gray-700 text-white hover:bg-gray-600";
   }
   
   const finalClassName = cn(baseClasses, variantClasses, className);
@@ -215,74 +215,74 @@ import { Separator } from '@/components/ui/separator';
 export function DefaultLandingComponent(): JSX.Element {
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-gray-100 relative overflow-auto">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-slate-100 bg-[length:20px_20px] opacity-40"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-indigo-400/20 to-cyan-600/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-gray-400/20 to-gray-600/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-gray-400/20 to-gray-600/20 rounded-full blur-3xl"></div>
       
-      <div className="relative flex items-center justify-center min-h-screen p-6">
-        <div className="max-w-4xl w-full text-center space-y-12">
+      <div className="relative flex items-center justify-center min-h-screen p-4 sm:p-6">
+        <div className="max-w-4xl w-full text-center space-y-6 sm:space-y-8">
           {/* Hero Section */}
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium bg-blue-100 text-blue-700 border-blue-200">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
+              <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 border-gray-200">
                 ⚡ AI-Powered Development
               </Badge>
-              <h1 className="text-4xl md:text-7xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-800 bg-clip-text text-transparent leading-tight tracking-tight">
                 Component Forge
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-medium">
                 Transform your ideas into beautiful React components with AI assistance. 
                 Powered by ShadCN UI for professional, accessible design.
               </p>
             </div>
             
             {/* Feature badges */}
-            <div className="flex flex-wrap justify-center gap-3 mt-8">
-              <Badge variant="outline" className="px-3 py-1.5 text-sm">🎨 ShadCN UI</Badge>
-              <Badge variant="outline" className="px-3 py-1.5 text-sm">⚛️ React</Badge>
-              <Badge variant="outline" className="px-3 py-1.5 text-sm">🎯 Javascript Ready</Badge>
-              <Badge variant="outline" className="px-3 py-1.5 text-sm">📱 Responsive</Badge>
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
+              <Badge variant="outline" className="px-4 py-2 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">🎨 ShadCN UI</Badge>
+              <Badge variant="outline" className="px-4 py-2 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">⚛️ React</Badge>
+              <Badge variant="outline" className="px-4 py-2 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">🎯 Javascript Ready</Badge>
+              <Badge variant="outline" className="px-4 py-2 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">📱 Responsive</Badge>
             </div>
           </div>
 
           {/* Examples Card */}
-          <div className="max-w-2xl mx-auto">
-            <Card className="backdrop-blur-sm bg-white/80 border-white/20 shadow-xl">
+          <div className="max-w-2xl lg:max-w-3xl mx-auto">
+            <Card className="backdrop-blur-sm bg-white/90 border-gray-200/50 shadow-2xl ring-1 ring-gray-900/5">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-semibold flex items-center justify-center gap-3 text-gray-900">
-                  <span className="text-3xl">✨</span>
+                <CardTitle className="text-xl sm:text-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 text-gray-900">
+                  <span className="text-2xl sm:text-3xl">✨</span>
                   Try these examples
                 </CardTitle>
-                <p className="text-gray-600 text-center mt-2">Click any demo button to see it in action</p>
+                <p className="text-gray-600 text-center mt-2 sm:mt-3 text-sm sm:text-base font-medium">Click any demo button to see it in action</p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3">
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
-                    <span className="text-gray-700 font-medium group-hover:text-gray-900">"Create a modern button component"</span>
-                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="space-y-3 sm:space-y-4">
+                <div className="grid gap-2 sm:gap-3">
+                  <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 group border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                    <span className="text-gray-800 font-semibold group-hover:text-gray-900 text-base">"Create a modern button component"</span>
+                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">
                       Demo
                     </Button>
                   </div>
                   <Separator className="my-2" />
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
-                    <span className="text-gray-700 font-medium group-hover:text-gray-900">"Build a contact form with validation"</span>
-                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 group border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                    <span className="text-gray-800 font-semibold group-hover:text-gray-900 text-base">"Build a contact form with validation"</span>
+                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">
                       Demo
                     </Button>
                   </div>
                   <Separator className="my-2" />
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
-                    <span className="text-gray-700 font-medium group-hover:text-gray-900">"Design a user profile card"</span>
-                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 group border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                    <span className="text-gray-800 font-semibold group-hover:text-gray-900 text-base">"Design a user profile card"</span>
+                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">
                       Demo
                     </Button>
                   </div>
                   <Separator className="my-2" />
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
-                    <span className="text-gray-700 font-medium group-hover:text-gray-900">"Create a data table with sorting"</span>
-                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 group border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                    <span className="text-gray-800 font-semibold group-hover:text-gray-900 text-base">"Create a data table with sorting"</span>
+                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">
                       Demo
                     </Button>
                   </div>
@@ -292,21 +292,21 @@ export function DefaultLandingComponent(): JSX.Element {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+            <Button size="lg" className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
               Start Creating →
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-6 text-lg font-semibold bg-white/50 backdrop-blur-sm border-gray-300 hover:bg-white/80 shadow-lg">
+            <Button variant="outline" size="lg" className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold bg-white/60 backdrop-blur-sm border-2 border-gray-300 hover:border-gray-400 hover:bg-white/80 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
               View Gallery
             </Button>
           </div>
 
           {/* Footer text */}
-          <div className="text-center space-y-2">
-            <p className="text-gray-600 font-medium">
+          <div className="text-center space-y-1 sm:space-y-2">
+            <p className="text-gray-700 font-semibold text-sm sm:text-base">
               Ready to build something amazing?
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-600 font-medium">
               Start typing in the chat panel to generate your first component
             </p>
           </div>
@@ -498,7 +498,7 @@ import { Badge } from '@/components/ui/badge';
 
 export function DefaultLandingComponent(): JSX.Element {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4 overflow-auto">
       <div className="max-w-2xl text-center space-y-8">
         <div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -512,40 +512,41 @@ export function DefaultLandingComponent(): JSX.Element {
           </p>
         </div>
 
-        <Card className="text-left">
+        <Card className="text-left shadow-2xl ring-1 ring-gray-900/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              ✨ Try these examples
+            <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+              <span className="text-3xl">✨</span>
+              Try these examples
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-3 text-gray-600">
-              <li className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Demo</Button>
-                "Create a button component"
+            <ul className="space-y-4 text-gray-700">
+              <li className="flex items-center justify-between p-4 rounded-lg bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                <span className="font-semibold">"Create a button component"</span>
+                <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">Demo</Button>
               </li>
-              <li className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Demo</Button>
-                "Build a contact form with validation"
+              <li className="flex items-center justify-between p-4 rounded-lg bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                <span className="font-semibold">"Build a contact form with validation"</span>
+                <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">Demo</Button>
               </li>
-              <li className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Demo</Button>
-                "Make a card with user profile information"
+              <li className="flex items-center justify-between p-4 rounded-lg bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                <span className="font-semibold">"Make a card with user profile information"</span>
+                <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">Demo</Button>
               </li>
-              <li className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Demo</Button>
-                "Design a calendar picker component"
+              <li className="flex items-center justify-between p-4 rounded-lg bg-gray-50/70 hover:bg-gray-100/70 transition-all duration-200 border border-gray-200/50 hover:border-gray-300/50 hover:shadow-md">
+                <span className="font-semibold">"Design a calendar picker component"</span>
+                <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-200 font-semibold border-gray-300 hover:border-gray-400 hover:bg-gray-50">Demo</Button>
               </li>
             </ul>
           </CardContent>
         </Card>
 
         <div className="flex gap-4 justify-center">
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-            Start Creating →
-          </Button>
-          <Button variant="outline" size="lg">
-            View Examples
+          <Button size="lg" className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+              Start Creating →
+            </Button>
+         <Button variant="outline" size="lg" className="px-8 py-6 text-lg font-semibold bg-white/50 backdrop-blur-sm border-gray-300 hover:bg-white/80 shadow-lg">
+              View Gallery
           </Button>
         </div>
 

@@ -126,9 +126,9 @@ export default function SandpackStudio({
   return (
     <div className="h-full bg-gray-50 flex flex-col">
       {isUpdatingDeps && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-blue-50 border-b border-blue-200 px-4 py-2">
-          <div className="text-sm text-blue-700 flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
+        <div className="absolute top-0 left-0 right-0 z-10 bg-gray-50 border-b border-gray-200 px-4 py-2">
+          <div className="text-sm text-gray-700 flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
             Installing new dependencies...
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function SandpackStudio({
                     onClick={() => setActiveTab("preview")}
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
                       activeTab === "preview"
-                        ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+                        ? "text-gray-900 border-b-2 border-gray-900 bg-white"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                     }`}
                   >
@@ -197,7 +197,7 @@ export default function SandpackStudio({
                   onClick={() => setActiveTab("code")}
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
                     activeTab === "code"
-                      ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+                      ? "text-gray-900 border-b-2 border-gray-900 bg-white"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   }`}
                 >
