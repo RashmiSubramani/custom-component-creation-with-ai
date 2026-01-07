@@ -87,13 +87,13 @@ export function DefaultLandingComponent() {
   return (
     <div className="flex items-center justify-center w-full h-screen bg-gray-50">
       <div className="text-center p-8">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-6"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-gray-800 mx-auto mb-6 shadow-lg"></div>
         <h3 className="text-2xl font-semibold text-gray-800 mb-4">Generating Component</h3>
         <p className="text-gray-600 text-lg mb-4">Please wait while we create your custom component...</p>
         <div className="flex justify-center space-x-1">
-          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+          <div className="w-3 h-3 bg-gray-800 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+          <div className="w-3 h-3 bg-gray-800 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+          <div className="w-3 h-3 bg-gray-800 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
         </div>
       </div>
     </div>
@@ -272,9 +272,11 @@ export function DefaultLandingComponent() {
       <header className="flex-shrink-0 border-b border-gray-200 bg-white">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
+            {/* <div className="p-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg"> */}
+            <div className="p-1.5 bg-gradient-to-r from-black to-gray-800 rounded-lg">
               <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-sm">⚡</span>
+                {/* <span className="text-blue-600 font-bold text-sm">⚡</span> */}
+                <span className="text-black font-bold text-sm">⚡</span>
               </div>
             </div>
             <div>
