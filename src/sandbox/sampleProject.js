@@ -320,6 +320,7 @@ export default DefaultLandingComponent;`;
 
     return files;
   } catch (error) {
+    console.error("Error loading sample project files:", error);
     return fallbackFiles;
   }
 }
@@ -403,7 +404,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )`,
 
-  "/src/App.tsx": `import DefaultLandingComponent from './landing'
+  "/src/App.tsx": `import { DefaultLandingComponent } from './landing'
 import React from 'react'
 
 function App(): JSX.Element {

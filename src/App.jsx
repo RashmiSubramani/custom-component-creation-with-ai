@@ -22,6 +22,7 @@ function App() {
         setProjectFiles(initialFiles);
       } catch (error) {
         // Fallback to empty state - user can still generate components
+        console.error("Error loading initial project files:", error);
         setProjectFiles({});
       } finally {
         setIsLoadingInitialProject(false);
@@ -68,6 +69,7 @@ function App() {
       URL.revokeObjectURL(url);
     } catch (error) {
       // Silently fail for zip download errors
+      console.error("Error generating ZIP file:", error);
     }
   };
 
@@ -83,10 +85,16 @@ function App() {
 
 export function DefaultLandingComponent() {
   return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Generating component...</p>
+    <div className="flex items-center justify-center w-full h-screen bg-gray-50">
+      <div className="text-center p-8">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-6"></div>
+        <h3 className="text-2xl font-semibold text-gray-800 mb-4">Generating Component</h3>
+        <p className="text-gray-600 text-lg mb-4">Please wait while we create your custom component...</p>
+        <div className="flex justify-center space-x-1">
+          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+        </div>
       </div>
     </div>
   );
@@ -99,19 +107,19 @@ export function DefaultLandingComponent() {
 
       // First prompt: Use 5-phase generation system
       try {
-        console.log('🚀 Using 5-Phase Generation System');
+        console.log("🚀 Using 5-Phase Generation System");
 
         // Use the new 5-phase system
         const result = await generateComponentWithPhases(prompt, {});
 
         if (!result.success) {
-          throw new Error('5-phase generation failed');
+          throw new Error("5-phase generation failed");
         }
 
         // Transform @/ imports to relative imports for Sandpack compatibility
         const files = result.files;
-        Object.keys(files).forEach(path => {
-          if (typeof files[path] === 'string') {
+        Object.keys(files).forEach((path) => {
+          if (typeof files[path] === "string") {
             files[path] = files[path].replace(
               /from\s+["']@\/components\/ui\/([^"']+)["']/g,
               'from "../components/ui/$1"'
@@ -127,15 +135,18 @@ export function DefaultLandingComponent() {
         // Ensure proper file paths for Sandpack
         const sandpackFiles = {};
         Object.entries(files).forEach(([path, content]) => {
-          const sandpackPath = path.startsWith('/') ? path : '/' + path;
+          const sandpackPath = path.startsWith("/") ? path : "/" + path;
           sandpackFiles[sandpackPath] = content;
         });
 
         setProjectFiles(sandpackFiles);
 
-        console.log('✅ 5-Phase Generation completed successfully');
+        console.log("✅ 5-Phase Generation completed successfully");
       } catch (phaseError) {
-        console.error('❌ 5-Phase Generation failed, falling back to simple template:', phaseError);
+        console.error(
+          "❌ 5-Phase Generation failed, falling back to simple template:",
+          phaseError
+        );
 
         // Simple fallback - use the current project structure
         const baseFiles = projectFiles;
@@ -181,19 +192,19 @@ export function DefaultLandingComponent() {
     } else {
       // Subsequent prompts: Use 5-phase system for modifications too
       try {
-        console.log('🚀 Using 5-Phase System for modification');
+        console.log("🚀 Using 5-Phase System for modification");
 
         // Use the 5-phase system for modifications
         const result = await generateComponentWithPhases(prompt, {});
 
         if (!result.success) {
-          throw new Error('5-phase modification failed');
+          throw new Error("5-phase modification failed");
         }
 
         // Transform @/ imports to relative imports for Sandpack compatibility
         const files = result.files;
-        Object.keys(files).forEach(path => {
-          if (typeof files[path] === 'string') {
+        Object.keys(files).forEach((path) => {
+          if (typeof files[path] === "string") {
             files[path] = files[path].replace(
               /from\s+["']@\/components\/ui\/([^"']+)["']/g,
               'from "../components/ui/$1"'
@@ -208,15 +219,15 @@ export function DefaultLandingComponent() {
         // Ensure proper file paths for Sandpack
         const sandpackFiles = {};
         Object.entries(files).forEach(([path, content]) => {
-          const sandpackPath = path.startsWith('/') ? path : '/' + path;
+          const sandpackPath = path.startsWith("/") ? path : "/" + path;
           sandpackFiles[sandpackPath] = content;
         });
 
         setProjectFiles(sandpackFiles);
 
-        console.log('✅ 5-Phase modification completed successfully');
+        console.log("✅ 5-Phase modification completed successfully");
       } catch (error) {
-        console.error('❌ 5-Phase modification failed:', error);
+        console.error("❌ 5-Phase modification failed:", error);
 
         // Simple fallback - just show an error message
         const errorComponent = `import React from 'react';
@@ -235,9 +246,9 @@ export function DefaultLandingComponent() {
   );
 }`;
 
-        setProjectFiles(prev => ({
+        setProjectFiles((prev) => ({
           ...prev,
-          "/src/landing/index.tsx": errorComponent
+          "/src/landing/index.tsx": errorComponent,
         }));
       }
 
@@ -302,8 +313,14 @@ export function DefaultLandingComponent() {
       <main className="flex-1 overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full relative">
           {/* Left Pane - Chat Interface */}
-          <div className={`${isPromptCollapsed ? 'w-0' : 'w-full lg:w-1/4'} border-r border-gray-200 h-full overflow-hidden flex-shrink-0 transition-all duration-300 ${isPromptCollapsed ? 'border-r-0' : ''}`}>
-            <div className={`h-full ${isPromptCollapsed ? 'hidden' : 'block'}`}>
+          <div
+            className={`${
+              isPromptCollapsed ? "w-0" : "w-full lg:w-1/4"
+            } border-r border-gray-200 h-full overflow-hidden flex-shrink-0 transition-all duration-300 ${
+              isPromptCollapsed ? "border-r-0" : ""
+            }`}
+          >
+            <div className={`h-full ${isPromptCollapsed ? "hidden" : "block"}`}>
               <PromptComposer
                 onGenerateComponent={handleGenerateComponent}
                 selectedSuggestions={selectedSuggestions}
@@ -313,7 +330,11 @@ export function DefaultLandingComponent() {
           </div>
 
           {/* Collapse Toggle Button */}
-          <div className={`absolute top-1/2 transform -translate-y-1/2 z-20 transition-all duration-300 ${isPromptCollapsed ? 'left-2' : 'left-[calc(25%-24px)]'}`}>
+          <div
+            className={`absolute top-1/2 transform -translate-y-1/2 z-20 transition-all duration-300 ${
+              isPromptCollapsed ? "left-2" : "left-[calc(25%-24px)]"
+            }`}
+          >
             <Button
               variant="ghost"
               size="sm"
@@ -349,7 +370,7 @@ export function DefaultLandingComponent() {
           </div>
         </div>
       </main>
-      
+
       {/* Fetch Console - Fixed positioned */}
       <FetchConsole />
     </div>

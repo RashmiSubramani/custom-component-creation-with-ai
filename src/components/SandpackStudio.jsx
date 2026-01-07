@@ -53,13 +53,9 @@ function extractDependencies(code) {
 }
 
 // Get latest version for a package (simplified)
-async function getPackageVersion(packageName) {
-  try {
-    // For demo purposes, use 'latest' - in production you'd query npm API
-    return "latest";
-  } catch {
-    return "latest";
-  }
+async function getPackageVersion() {
+  // For demo purposes, use 'latest' - in production you'd query npm API
+  return "latest";
 }
 
 export default function SandpackStudio({
@@ -146,9 +142,6 @@ export default function SandpackStudio({
         <SandpackProvider
           key={filesKey}
           theme="light"
-          // customSetup={{
-          //   entry: "/src/main.tsx",
-          // }}
           customSetup={{
             dependencies: {
               react: "^18.2.0",

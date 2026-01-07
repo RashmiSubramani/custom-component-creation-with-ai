@@ -237,19 +237,20 @@ async function phaseDesign(userPrompt, existingCode) {
   console.log("🎨 Phase 1: Design - Analyzing prompt for ShadCN components...");
 
   try {
-    // Fetch ShadCN components list and extract actual component names
-    const response = await fetch("https://ui.shadcn.com/llms.txt");
-    const text = await response.text();
-
-    // Extract component names from documentation URLs
-    // Look for patterns like: /docs/components/button, /docs/components/table, etc.
-    const componentMatches = text.match(/\/docs\/components\/([a-z-]+)/g) || [];
+    // Use predefined component list for consistent results
     const shadcnComponents = [
-      ...new Set(
-        componentMatches
-          .map(match => match.replace('/docs/components/', ''))
-          .filter(comp => comp && comp !== 'form') // Remove 'form' as it's special
-      )
+      // Form & Input
+      "form", "field", "button", "button-group", "input", "input-group", "input-otp", "textarea", "checkbox", "radio-group", "select", "switch", "slider", "calendar", "label",
+      // Layout & Navigation
+      "accordion", "breadcrumb", "navigation-menu", "sidebar", "tabs", "separator", "scroll-area", "resizable",
+      // Overlays & Dialogs
+      "dialog", "alert-dialog", "sheet", "drawer", "popover", "tooltip", "hover-card", "context-menu", "dropdown-menu", "menubar", "command",
+      // Feedback & Status
+      "alert", "toast", "progress", "spinner", "skeleton", "badge", "empty",
+      // Display & Media
+      "avatar", "card", "table", "chart", "carousel", "aspect-ratio", "item", "kbd",
+      // Misc
+      "collapsible", "toggle", "toggle-group", "pagination"
     ];
 
     // Debug: Show what components we fetched
@@ -322,6 +323,7 @@ Return only component names as a JSON object: {"values": ["component1", "compone
           .split(",")
           .map((comp) => comp.replace(/["\s]/g, ""))
           .filter((comp) => comp);
+        console.log("Extracted components from array match:", selectedComponents);
       }
     }
 
@@ -402,11 +404,44 @@ async function phaseBackendMerge(baseCode, componentData) {
   const mergedCode = { ...baseCode };
   const allDependencies = {};
 
-  // Add component files
+  // Add component files with import path transformation
   for (const [componentName, componentInfo] of Object.entries(componentData)) {
     if (componentInfo.componentCode) {
       const filePath = `/src/components/ui/${componentName}.tsx`;
-      mergedCode[filePath] = componentInfo.componentCode;
+
+      // Transform import paths from ShadCN registry format to our project structure
+      let transformedCode = componentInfo.componentCode
+        .replace(
+          /@\/registry\/default\/ui\//g,
+          "@/components/ui/"
+        )
+        .replace(
+          /@\/registry\/default\/lib\//g,
+          "@/lib/"
+        )
+        .replace(
+          /from\s+["']@\/registry\/[^"']*\/ui\/([^"']+)["']/g,
+          'from "@/components/ui/$1"'
+        )
+        .replace(
+          /from\s+["']@\/registry\/[^"']*\/lib\/([^"']+)["']/g,
+          'from "@/lib/$1"'
+        );
+
+      // Additional fix for components importing other ui components
+      // Since all components are in the same /src/components/ui/ directory,
+      // they should use relative imports like "./button" instead of "@/components/ui/button"
+      transformedCode = transformedCode
+        .replace(
+          /from\s+["']@\/components\/ui\/([^"']+)["']/g,
+          'from "./$1"'
+        )
+        .replace(
+          /from\s+["']\.\.\/components\/ui\/([^"']+)["']/g,
+          'from "./$1"'
+        );
+
+      mergedCode[filePath] = transformedCode;
       console.log(`📁 Added ${filePath}`);
     }
 
@@ -461,18 +496,18 @@ async function phaseCodeGeneration(userPrompt, mergedCode, selectedFlows = {}) {
 
   console.log("Available components:", availableComponents);
 
-  const systemPrompt = `You are an expert React TypeScript component generator for Kissflow platform.
+  const systemPrompt = `You are an expert React TypeScript component generator.
 
 CRITICAL REQUIREMENTS:
 1. Generate ONLY the TSX component code for "src/landing/index.tsx"
-2. Component MUST be named: export function DefaultLandingComponent({ kf }: LandingProps): JSX.Element
-3. Define LandingProps interface: interface LandingProps { kf?: any; }
+2. Component MUST be named: export function DefaultLandingComponent(): JSX.Element
+3. Use clean, modern component structure without external dependencies
 4. MANDATORY: Include necessary import statements from "@/components/ui/*" for available components
 5. Use the imported components based on user request
 6. Use Tailwind CSS for styling
 7. Use lucide-react icons when needed
 8. Make responsive UI
-9. Use kf prop intelligently for Kissflow SDK integration when needed
+9. Create modern, responsive components with clean design
 
 CRITICAL IMPORT RULES:
 - ALWAYS use lowercase file names in imports: "@/components/ui/button" NOT "@/components/ui/Button"

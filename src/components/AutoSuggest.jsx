@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronDown, Hash, FileText, Settings, BarChart3, Table } from 'lucide-react';
 
 const categoryIcons = {
@@ -77,11 +77,11 @@ export default function AutoSuggest({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [suggestions, currentIndex, onClose]);
+  }, [suggestions, currentIndex, onClose, handleSelect]);
 
-  const handleSelect = (suggestion) => {
+  const handleSelect = useCallback((suggestion) => {
     onSelect(suggestion);
-  };
+  }, [onSelect]);
 
   const handleMouseEnter = (index) => {
     setCurrentIndex(index);
