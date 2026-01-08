@@ -13,10 +13,15 @@ Transform natural language into production-ready React components. Simply chat w
 ## ✨ Key Features
 
 🧠 **Intelligent AI Workflow** - 5-phase generation: Design → Registry → Merge → Generate → Integrate
+
 📦 **53+ ShadCN Components** - Complete UI library from forms to data visualization
+
 ⚡ **Real-time Preview** - Instant Sandpack-powered code execution and editing
+
 🌐 **Production Deployment** - Live on Vercel + Railway with CI/CD
+
 🎨 **Modern Interface** - Clean chat UI with collapsible workspace panels
+
 📱 **Responsive Design** - Optimized for all screen sizes and devices
 
 ## 🛠️ Tech Stack
