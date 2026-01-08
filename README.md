@@ -1,57 +1,68 @@
-# Component Forge
+# ⚡ Component Forge
 
-AI-powered React component generator with ShadCN integration and live preview
+AI-powered React component generator with intelligent ShadCN integration
 
-🔗 **[Live Demo](https://custom-component-creation-with-ai.vercel.app)** | ⚡ **Chat with AI → Generate Components → Live Preview**
+🚀 **[Live Demo](https://custom-component-creation-with-ai.vercel.app)** | 💬 Chat → 🎨 Generate → 👀 Preview
 
-## What it does
+![Component Forge Demo](https://img.shields.io/badge/Status-Live-brightgreen) ![React](https://img.shields.io/badge/React-18.2.0-blue) ![AI Powered](https://img.shields.io/badge/AI-OpenAI%20GPT--4-orange)
 
-Type natural language prompts like "create a pricing card" and watch AI generate production-ready React components with ShadCN styling, complete with live editing and preview.
+## 🎯 What it does
 
-## Key Features
+Transform natural language into production-ready React components. Simply chat with AI and watch as it generates complete components with ShadCN styling, TypeScript support, and live preview.
 
-• **5-phase AI workflow** - Design analysis → Component selection → Code generation → Integration
-• **53 ShadCN components** - Forms, navigation, data display, feedback, overlays
-• **Live code editing** - Real-time preview with Sandpack integration
-• **Full-stack deployment** - React frontend (Vercel) + Node.js API (Railway)
-• **Modern UX** - Clean chat interface with collapsible panels
+## ✨ Key Features
 
-## Tech Stack
+🧠 **Intelligent AI Workflow** - 5-phase generation: Design → Registry → Merge → Generate → Integrate
+📦 **53+ ShadCN Components** - Complete UI library from forms to data visualization
+⚡ **Real-time Preview** - Instant Sandpack-powered code execution and editing
+🌐 **Production Deployment** - Live on Vercel + Railway with CI/CD
+🎨 **Modern Interface** - Clean chat UI with collapsible workspace panels
+📱 **Responsive Design** - Optimized for all screen sizes and devices
 
-**Frontend:** React, Vite, TailwindCSS, ShadCN/ui, Sandpack
-**Backend:** Node.js, Express, OpenAI API
-**Deployment:** Vercel + Railway
+## 🛠️ Tech Stack
 
-## Quick Start
+| Layer           | Technologies                            |
+| --------------- | --------------------------------------- |
+| **Frontend**    | React 18, Vite, TypeScript, TailwindCSS |
+| **UI Library**  | ShadCN/ui, Lucide Icons, CVA            |
+| **Code Engine** | Sandpack (CodeSandbox)                  |
+| **Backend**     | Node.js, Express, OpenAI GPT-4          |
+| **Deployment**  | Vercel (Frontend) + Railway (API)       |
+
+## ⚡ Quick Start
 
 ```bash
-# 1. Setup backend
+# 1. Clone & Install
+git clone <repo-url> && cd component-forge
+npm install
+
+# 2. Backend Setup
 cd server && npm install
-echo "OPENAI_API_KEY=your_key_here" > .env
-npm start
+echo "OPENAI_API_KEY=your_key_here" > .env && npm start
 
-# 2. Setup frontend
-cd .. && npm install && npm run dev
-
-# 3. Open http://localhost:5173
+# 3. Frontend
+cd .. && npm run dev
+# → Open http://localhost:5173
 ```
 
-## Example Prompts
+## 💡 Try These Prompts
 
+```bash
+💻 "Create a modern login form with email validation"
+💳 "Build a pricing table with 3 tiers and highlight popular plan"
+🧭 "Make a responsive navigation with dropdown menus"
+📊 "Generate a data table with search, sort, and pagination"
+🎨 "Design a hero section with gradient background"
+📱 "Create a contact form with file upload support"
 ```
-"Create a login form with email and password"
-"Make a pricing table with 3 tiers"
-"Build a navigation menu with dropdown"
-"Create a data table with search"
-```
 
-## Architecture Highlights
+## 🏗️ Architecture Highlights
 
-- **AI Integration**: Custom 5-phase generation workflow with OpenAI
-- **Component Library**: Automated ShadCN registry integration
-- **Real-time Preview**: Sandpack-powered code execution
-- **Production Ready**: CORS handling, environment config, error boundaries
-- **Modern React**: Hooks, functional components, clean architecture
+🔄 **Smart AI Pipeline** - Multi-phase workflow with context awareness and error recovery
+📚 **Dynamic Registry** - Real-time ShadCN component fetching and integration
+⚡ **Live Code Execution** - Sandpack-powered instant preview with hot reload
+🛡️ **Production Ready** - CORS, environment config, error boundaries, TypeScript
+🎯 **Modern Patterns** - React 18, custom hooks, clean architecture, performance optimized
 
 ---
 
@@ -90,5 +101,3 @@ npm start & cd .. && npm run dev
 </details>
 
 ---
-
-_Built as a portfolio project showcasing AI integration, modern React patterns, and full-stack deployment capabilities._
