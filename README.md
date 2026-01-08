@@ -59,10 +59,12 @@ cd .. && npm install && npm run dev
 <summary>🔧 Development Setup</summary>
 
 ### Prerequisites
+
 - Node.js 18+
 - OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
 
 ### Full Setup
+
 ```bash
 # Clone and install
 git clone <repo-url>
@@ -80,7 +82,8 @@ npm start & cd .. && npm run dev
 ```
 
 ### Common Issues
-- **"Cannot connect to server"**: Check backend is running on port 3004
+
+- **"Cannot connect to server"**: Check backend is running on port 3005
 - **"Generation failed"**: Verify OpenAI API key and quota
 - **Preview not loading**: Hard refresh (Ctrl+Shift+R)
 
@@ -88,4 +91,4 @@ npm start & cd .. && npm run dev
 
 ---
 
-*Built as a portfolio project showcasing AI integration, modern React patterns, and full-stack deployment capabilities.*
+_Built as a portfolio project showcasing AI integration, modern React patterns, and full-stack deployment capabilities._

@@ -1,13 +1,13 @@
 // LLM service for making API calls through backend proxy
 // This avoids CORS issues by routing requests through your server
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3004";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3005";
 
 /**
  * Simple error toast function for user feedback
  */
 function _sendErrorToast(error) {
-  console.error('LLM Error:', error.message);
+  console.error("LLM Error:", error.message);
   // Could be extended to show actual toast notifications in the future
 }
 
@@ -38,7 +38,7 @@ export async function callLLM(prompt, model = "openai") {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
       _sendErrorToast(
         new Error(
-          "Cannot connect to server. Make sure the backend server is running on port 3004."
+          "Cannot connect to server. Make sure the backend server is running on port 3005."
         )
       );
     }

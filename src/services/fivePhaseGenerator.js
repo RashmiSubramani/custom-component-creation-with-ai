@@ -21,13 +21,14 @@ import { callLLM } from "./llm.js";
  */
 export async function generateComponentWithPhases(
   userPrompt,
-  selectedFlows = {}
+  existingProjectFiles = null,
+  isInitialGeneration = true
 ) {
   console.log(`🚀 Starting 5-Phase workflow for prompt: ${userPrompt}`);
 
   try {
-    // Base application template
-    const baseCode = getBaseApplicationTemplate();
+    // Use existing project files if provided, otherwise use base template
+    const baseCode = existingProjectFiles ? existingProjectFiles : getBaseApplicationTemplate();
 
     // Phase 1: Design - Component Selection
     const selectedComponents = await phaseDesign(userPrompt, baseCode);
@@ -48,7 +49,7 @@ export async function generateComponentWithPhases(
     const generatedComponent = await phaseCodeGeneration(
       userPrompt,
       mergedCode,
-      selectedFlows
+      isInitialGeneration
     );
 
     // Phase 5: Final Integration - Complete Application
@@ -89,6 +90,129 @@ function getUIComponentsFromCode(existingCode) {
   }
 
   return names;
+}
+
+/**
+ * Extract ShadCN UI component names and their exported members.
+ * Parses component files to find all named exports (functions, constants, types).
+ * This allows the Code Generation Agent to know about utility exports like
+ * buttonVariants, CalendarDayButton, etc.
+ * @param {Object} existingCode - Dictionary of file paths to code content
+ * @returns {Object} - Dict mapping component names to list of exports (e.g., {'button': ['Button', 'buttonVariants']})
+ */
+function extractUIComponentExports(existingCode) {
+  const componentExports = {};
+
+  // Regex patterns to match various export forms
+  // Matches: export { Foo, Bar }
+  const exportBlockPattern = /export\s*\{([^}]+)\}/g;
+  // Matches: export const/function/type Foo
+  const exportDirectPattern = /export\s+(?:const|function|type|interface|class)\s+(\w+)/g;
+
+  for (const [filePath, content] of Object.entries(existingCode)) {
+    if (!(filePath.startsWith("src/components/ui/") || filePath.startsWith("/src/components/ui/")) || !filePath.endsWith(".tsx")) {
+      continue;
+    }
+
+    const componentName = filePath.replace(/^\/?(src\/components\/ui\/)/, "").replace(".tsx", "");
+    const exports = [];
+
+    // Find export blocks like: export { Button, buttonVariants }
+    let match;
+    while ((match = exportBlockPattern.exec(content)) !== null) {
+      const exportList = match[1];
+      // Split by comma and clean up whitespace
+      const items = exportList.split(",").map(item => item.trim().split(" as ")[0].trim());
+      exports.push(...items);
+    }
+
+    // Reset regex lastIndex for next iteration
+    exportBlockPattern.lastIndex = 0;
+
+    // Find direct exports like: export const buttonVariants = ...
+    while ((match = exportDirectPattern.exec(content)) !== null) {
+      const exportName = match[1];
+      if (!exports.includes(exportName)) {
+        exports.push(exportName);
+      }
+    }
+
+    // Reset regex lastIndex for next iteration
+    exportDirectPattern.lastIndex = 0;
+
+    if (exports.length > 0) {
+      componentExports[componentName] = exports;
+    }
+  }
+
+  return componentExports;
+}
+
+/**
+ * Format component exports into a readable context string for LLM.
+ * Converts component export data into a formatted string that clearly shows
+ * which exports are available from each component.
+ * @param {string[]} componentsList - List of component names (e.g., ['button', 'calendar'])
+ * @param {Object} componentExports - Dict mapping component names to their exports (e.g., {'button': ['Button', 'buttonVariants']})
+ * @returns {string} - Formatted string for LLM context
+ */
+function formatComponentExportsContext(componentsList, componentExports) {
+  const exportsInfo = [];
+  for (const componentName of componentsList) {
+    if (componentExports[componentName]) {
+      const exports = componentExports[componentName];
+      const exportsStr = exports.join(", ");
+      exportsInfo.push(`  - ${componentName}: ${exportsStr}`);
+    }
+  }
+  return "Available ShadCN Components (with exports):\n" + exportsInfo.join("\n");
+}
+
+/**
+ * Update package.json with new dependencies (parse once, modify, serialize once).
+ * Handles dependencies in formats: "package-name", "package-name@latest", "@scope/package@version".
+ * @param {Object} baseProject - Project structure dictionary containing package.json
+ * @param {Set} dependencies - Set of npm package names (may include version specifiers)
+ * @returns {void}
+ */
+function updatePackageDependencies(baseProject, dependencies) {
+  if (!dependencies || dependencies.size === 0) {
+    return;
+  }
+
+  // NPM dependency pattern regex - handles @scope/package@version formats
+  const NPM_DEP_PATTERN = /^(@?[a-z0-9-_]+(?:\/[a-z0-9-_]+)?)(?:@(.+))?$/i;
+
+  const packageJson = JSON.parse(baseProject["/package.json"]);
+  const existingDeps = packageJson.dependencies;
+  const newDeps = {};
+
+  for (const depString of dependencies) {
+    const match = NPM_DEP_PATTERN.exec(depString);
+
+    if (!match) {
+      console.warn(`Skipping invalid dependency format: ${depString}`);
+      continue;
+    }
+
+    // Extract package name and version using regex groups
+    const packageName = match[1].trim();
+    const version = match[2];
+
+    // Default to latest if version not specified
+    const finalVersion = version || "latest";
+
+    // Only add if not already in dependencies
+    if (!existingDeps[packageName]) {
+      newDeps[packageName] = finalVersion;
+    }
+  }
+
+  if (Object.keys(newDeps).length > 0) {
+    Object.assign(existingDeps, newDeps);
+    baseProject["/package.json"] = JSON.stringify(packageJson, null, 2);
+    console.log(`📦 Enhanced dependency management: Added ${Object.keys(newDeps).length} new dependencies`);
+  }
 }
 
 /**
@@ -204,17 +328,13 @@ function App(): JSX.Element {
 export default App;`,
     "/src/landing/index.tsx": `import React from 'react';
 
-interface LandingProps {
-  kf?: any;
-}
-
-export function DefaultLandingComponent({ kf }: LandingProps): JSX.Element {
+export function DefaultLandingComponent(): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
       <div className="relative flex items-center justify-center min-h-screen p-6">
         <div className="max-w-4xl w-full text-center space-y-12">
           <h1 className="text-2xl md:text-7xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent leading-tight">
-            Hi {kf?.user?.Name || 'Creator'}, Welcome to Component Forge
+            Welcome to Component Forge
           </h1>
           <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Transform your ideas into beautiful React components with AI assistance.
@@ -456,14 +576,11 @@ async function phaseBackendMerge(baseCode, componentData) {
     }
   }
 
-  // Update package.json with dependencies
+  // Update package.json with dependencies using enhanced parsing
   if (mergedCode["/package.json"]) {
-    const packageJson = JSON.parse(mergedCode["/package.json"]);
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      ...allDependencies,
-    };
-    mergedCode["/package.json"] = JSON.stringify(packageJson, null, 2);
+    updatePackageDependencies(mergedCode, new Set(Object.keys(allDependencies).map(dep =>
+      allDependencies[dep] === "latest" ? dep : `${dep}@${allDependencies[dep]}`
+    )));
     console.log(
       `📦 Added ${Object.keys(allDependencies).length} dependencies:`,
       Object.keys(allDependencies)
@@ -482,10 +599,10 @@ async function phaseBackendMerge(baseCode, componentData) {
  * @param {Object} selectedFlows - Selected flows/forms
  * @returns {Promise<string>} - Generated component code
  */
-async function phaseCodeGeneration(userPrompt, mergedCode, selectedFlows = {}) {
+async function phaseCodeGeneration(userPrompt, mergedCode, isInitialGeneration = true) {
   console.log("🤖 Phase 4: Code Generation - Generating component...");
 
-  // Get available components
+  // Get available components and their exports
   const availableComponents = Object.keys(mergedCode)
     .filter(
       (path) =>
@@ -494,9 +611,21 @@ async function phaseCodeGeneration(userPrompt, mergedCode, selectedFlows = {}) {
     )
     .map((path) => path.split("/").pop().replace(".tsx", ""));
 
-  console.log("Available components:", availableComponents);
+  // Extract detailed component exports for better AI context
+  const componentExports = extractUIComponentExports(mergedCode);
+  const componentsContext = formatComponentExportsContext(availableComponents, componentExports);
 
-  const systemPrompt = `You are an expert React TypeScript component generator.
+  console.log("Available components:", availableComponents);
+  console.log("Component exports context:", componentsContext);
+
+  // Get existing component code to modify
+  const existingComponentCode = mergedCode["/src/landing/index.tsx"] || mergedCode["src/landing/index.tsx"] || "";
+
+  let systemPrompt;
+
+  if (isInitialGeneration) {
+    // Initial generation: Create complete new component
+    systemPrompt = `You are an expert React TypeScript component generator.
 
 CRITICAL REQUIREMENTS:
 1. Generate ONLY the TSX component code for "src/landing/index.tsx"
@@ -509,24 +638,63 @@ CRITICAL REQUIREMENTS:
 8. Make responsive UI
 9. Create modern, responsive components with clean design
 
+COMPONENT CONTEXT:
+${componentsContext}
+
 CRITICAL IMPORT RULES:
 - ALWAYS use lowercase file names in imports: "@/components/ui/button" NOT "@/components/ui/Button"
 - Component names in imports should match the actual exported names from the files
-- Available component files: ${availableComponents
-    .map((comp) => `"${comp}"`)
-    .join(", ")}
-- Example correct imports:
-  - import { Button } from "@/components/ui/button";
-  - import { Card, CardHeader, CardContent } from "@/components/ui/card";
-  - import { Table, TableBody, TableCell } from "@/components/ui/table";
+- Use the exact export names listed in the component context above
+- Example correct imports based on available exports:
+  - import { Button, buttonVariants } from "@/components/ui/button";
+  - import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+  - import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 
-AVAILABLE COMPONENTS: ${availableComponents.join(", ")}
+INSTRUCTION: Create a complete new component from scratch based on the user's requirements.
 
 Return ONLY the complete TSX component code in a markdown fenced code block with tsx extension.`;
+  } else {
+    // Reprompt: Modify existing component
+    systemPrompt = `You are an expert React TypeScript component modifier.
 
-  const userMessage = `Create a component for: "${userPrompt}". Selected Flows: ${JSON.stringify(
-    selectedFlows
-  )}. Return only the TSX code.`;
+CRITICAL REQUIREMENTS:
+1. Generate ONLY the TSX component code for "src/landing/index.tsx"
+2. Component MUST be named: export function DefaultLandingComponent(): JSX.Element
+3. Use clean, modern component structure without external dependencies
+4. MANDATORY: Include necessary import statements from "@/components/ui/*" for available components
+5. Use the imported components based on user request
+6. Use Tailwind CSS for styling
+7. Use lucide-react icons when needed
+8. Make responsive UI
+9. Create modern, responsive components with clean design
+
+COMPONENT CONTEXT:
+${componentsContext}
+
+CRITICAL IMPORT RULES:
+- ALWAYS use lowercase file names in imports: "@/components/ui/button" NOT "@/components/ui/Button"
+- Component names in imports should match the actual exported names from the files
+- Use the exact export names listed in the component context above
+- Example correct imports based on available exports:
+  - import { Button, buttonVariants } from "@/components/ui/button";
+  - import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+  - import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
+
+EXISTING COMPONENT CODE TO MODIFY:
+\`\`\`tsx
+${existingComponentCode}
+\`\`\`
+
+INSTRUCTION: Modify the existing component code above based on the user's request.
+- Keep existing functionality that is not being changed
+- Add, update, or enhance features as requested
+- Preserve the overall structure unless specifically asked to change it
+- Maintain existing styling that works well unless specifically asked to change it
+
+Return ONLY the complete modified TSX component code in a markdown fenced code block with tsx extension.`;
+  }
+
+  const userMessage = `${isInitialGeneration ? "Create a component for" : "Modify the existing component to"}: "${userPrompt}". Return only the TSX code.`;
 
   try {
     const response = await callLLM(

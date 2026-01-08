@@ -109,8 +109,8 @@ export function DefaultLandingComponent() {
       try {
         console.log("🚀 Using 5-Phase Generation System");
 
-        // Use the new 5-phase system
-        const result = await generateComponentWithPhases(prompt, {});
+        // Use the new 5-phase system (initial generation)
+        const result = await generateComponentWithPhases(prompt, projectFiles, true);
 
         if (!result.success) {
           throw new Error("5-phase generation failed");
@@ -194,8 +194,8 @@ export function DefaultLandingComponent() {
       try {
         console.log("🚀 Using 5-Phase System for modification");
 
-        // Use the 5-phase system for modifications
-        const result = await generateComponentWithPhases(prompt, {});
+        // Use the 5-phase system for modifications (reprompt)
+        const result = await generateComponentWithPhases(prompt, projectFiles, false);
 
         if (!result.success) {
           throw new Error("5-phase modification failed");
