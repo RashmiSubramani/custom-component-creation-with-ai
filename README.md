@@ -2,7 +2,12 @@
 
 AI-powered React component generator with intelligent ShadCN integration
 
-🚀 **[Live Demo](https://custom-component-creation-with-ai.vercel.app)** | 💬 Chat → 🎨 Generate → 👀 Preview
+## 🌐 Live Demo
+
+**[🚀 Try Custom_Component_Generation Live](https://custom-component-creation-with-ai.vercel.app)**
+ 
+ | 💬 Chat → 🎨 Generate → 👀 Preview
+
 
 ![Component Forge Demo](https://img.shields.io/badge/Status-Live-brightgreen) ![React](https://img.shields.io/badge/React-18.2.0-blue) ![AI Powered](https://img.shields.io/badge/AI-OpenAI%20GPT--4-orange)
 
@@ -23,6 +28,24 @@ Transform natural language into production-ready React components. Simply chat w
 🎨 **Modern Interface** - Clean chat UI with collapsible workspace panels
 
 📱 **Responsive Design** - Optimized for all screen sizes and devices
+
+---
+## Landing Page
+
+<img width="2052" height="1242" alt="Screenshot 2026-01-09 at 12 42 59 AM" src="https://github.com/user-attachments/assets/4168fc2c-293c-4971-ba56-a035cef87af0" />
+
+## Component generated
+<img width="2052" height="1242" alt="Screenshot 2026-01-09 at 1 35 54 AM" src="https://github.com/user-attachments/assets/7aaf15cd-1a65-44d3-8bdf-ca1290adb04c" />
+
+
+## Prompting and Reprompting
+
+https://github.com/user-attachments/assets/7cf34cd0-1842-4ef4-a13e-1d36fccb7d33
+
+
+
+
+---
 
 ## 🛠️ Tech Stack
 
